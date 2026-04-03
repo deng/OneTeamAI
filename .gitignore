@@ -1,0 +1,11 @@
+bin/
+obj/
+.vs/
+node_modules/
+dist/
+.vite/
+*.local
+*.db
+*.db-shm
+*.db-wal
+backups/

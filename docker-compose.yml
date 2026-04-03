@@ -1,0 +1,32 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Chatbot.Api/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://0.0.0.0:5078
+      ConnectionStrings__DefaultConnection: Data Source=/app/data/chatbot.db
+      Chatbot__ApiKey: ${CHATBOT_API_KEY}
+      Chatbot__Model: ${CHATBOT_MODEL:-gpt-4.1-mini}
+      Chatbot__Endpoint: ${CHATBOT_ENDPOINT:-https://api.openai.com/v1}
+      Chatbot__SessionLifetimeDays: ${CHATBOT_SESSION_LIFETIME_DAYS:-30}
+      Cors__AllowedOrigins__0: ${WEB_BASE_URL:-http://localhost:8080}
+    volumes:
+      - chatbot-data:/app/data
+    ports:
+      - "5078:5078"
+
+  web:
+    build:
+      context: .
+      dockerfile: Chatbot.Web/Dockerfile
+      args:
+        VITE_CHATBOT_API_BASE_URL: ${API_BASE_URL:-http://localhost:5078}
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+volumes:
+  chatbot-data:
