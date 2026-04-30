@@ -20,6 +20,9 @@ type ProjectSectionProps = {
   customers: CustomerResponse[];
   projectUpdateForm: UpdateProjectRequest;
   projects: ProjectResponse[];
+  projectsLoading?: boolean;
+  projectsError?: string | null;
+  onRetryProjects?: () => void;
   selectedProject: ProjectResponse | null;
   selectedProjectId: string;
   selectedProjectParticipants: MemberResponse[];
@@ -46,6 +49,9 @@ export function ProjectSection({
   customers,
   projectUpdateForm,
   projects,
+  projectsLoading = false,
+  projectsError = null,
+  onRetryProjects,
   selectedProject,
   selectedProjectId,
   selectedProjectParticipants,
@@ -118,6 +124,9 @@ export function ProjectSection({
         projects={projects}
         selectedProjectId={selectedProjectId}
         onSelectProjectId={onSelectProjectId}
+        projectsLoading={projectsLoading}
+        projectsError={projectsError}
+        onRetryProjects={onRetryProjects}
         conciergeApps={conciergeApps}
         onSelectRelatedConciergeAppId={onSelectRelatedConciergeAppId}
         conversations={conversations}

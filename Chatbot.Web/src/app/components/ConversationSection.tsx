@@ -17,6 +17,9 @@ type ConversationSectionProps = {
   conversationDetailError: string | null;
   createConversationForm: CreateConversationRequest;
   filteredConversations: ConversationSummaryResponse[];
+  conversationsLoading?: boolean;
+  conversationsError?: string | null;
+  onRetryConversations?: () => void;
   isConversationDetailLoading: boolean;
   relatedTickets: TicketResponse[];
   selectedConversation: ConversationSummaryResponse | null;
@@ -40,6 +43,9 @@ export function ConversationSection({
   conversationDetailError,
   createConversationForm,
   filteredConversations,
+  conversationsLoading = false,
+  conversationsError = null,
+  onRetryConversations,
   isConversationDetailLoading,
   relatedTickets,
   selectedConversation,
@@ -143,6 +149,9 @@ export function ConversationSection({
 
       <ConversationPanel
         filteredConversations={filteredConversations}
+        conversationsLoading={conversationsLoading}
+        conversationsError={conversationsError}
+        onRetryConversations={onRetryConversations}
         selectedConversationId={selectedConversationId}
         onSelectConversationId={onSelectConversationId}
         onSelectRelatedConciergeAppId={onSelectRelatedConciergeAppId}

@@ -16,6 +16,9 @@ type CustomerSectionProps = {
   createCustomerForm: CreateCustomerRequest;
   customerUpdateForm: UpdateCustomerRequest;
   customers: CustomerResponse[];
+  customersLoading?: boolean;
+  customersError?: string | null;
+  onRetryCustomers?: () => void;
   filteredConversations: ConversationSummaryResponse[];
   filteredTickets: TicketResponse[];
   projects: ProjectResponse[];
@@ -37,6 +40,9 @@ export function CustomerSection({
   createCustomerForm,
   customerUpdateForm,
   customers,
+  customersLoading = false,
+  customersError = null,
+  onRetryCustomers,
   filteredConversations,
   filteredTickets,
   projects,
@@ -167,6 +173,9 @@ export function CustomerSection({
         customers={customers}
         selectedCustomerId={selectedCustomerId}
         onSelectCustomerId={onSelectCustomerId}
+        customersLoading={customersLoading}
+        customersError={customersError}
+        onRetryCustomers={onRetryCustomers}
         filteredConversations={filteredConversations}
         filteredTickets={filteredTickets}
         onSelectRelatedConversationId={onSelectRelatedConversationId}

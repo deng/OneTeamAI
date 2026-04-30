@@ -58,6 +58,8 @@ export function useWorkspaceTickets({
   const [ticketUpdateDrafts, setTicketUpdateDrafts] = useState<Record<string, UpdateTicketRequest>>({});
   const [ticketDetail, setTicketDetail] = useState<TicketDetailItem | null>(null);
   const [isTicketDetailLoading, setIsTicketDetailLoading] = useState(false);
+  const [isTicketsLoading, setIsTicketsLoading] = useState(false);
+  const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [ticketDetailError, setTicketDetailError] = useState<string | null>(null);
   const [ticketCommentDraft, setTicketCommentDraft] = useState('');
   const [createTicketForm, setCreateTicketForm] = useState<CreateTicketRequest>(emptyCreateTicketForm);
@@ -86,30 +88,40 @@ export function useWorkspaceTickets({
 
     let cancelled = false;
 
+    setIsTicketsLoading(true);
+    setTicketsError(null);
+
     void (async () => {
-      const nextTickets = await ticketsApi.listTickets({ teamId: currentTeamId });
+      try {
+        const nextTickets = await ticketsApi.listTickets({ teamId: currentTeamId });
 
-      if (cancelled) {
-        return;
-      }
+        if (cancelled) {
+          return;
+        }
 
-      setTickets(nextTickets);
-      setTicketUpdateDrafts(
-        Object.fromEntries(nextTickets.filter(ticket => ticket.id).map(ticket => [ticket.id as string, buildDraft(ticket)])),
-      );
-      setSelectedTicketId(current =>
-        nextTickets.some(ticket => ticket.id === current)
-          ? current
-          : (nextTickets[0]?.id ?? ''),
-      );
-    })().catch(error => {
-      if (!cancelled) {
-        setFeedback({
-          kind: 'error',
-          text: getErrorMessage(error),
-        });
+        setTickets(nextTickets);
+        setTicketUpdateDrafts(
+          Object.fromEntries(nextTickets.filter(ticket => ticket.id).map(ticket => [ticket.id as string, buildDraft(ticket)])),
+        );
+        setSelectedTicketId(current =>
+          nextTickets.some(ticket => ticket.id === current)
+            ? current
+            : (nextTickets[0]?.id ?? ''),
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setTicketsError(getErrorMessage(error));
+          setFeedback({
+            kind: 'error',
+            text: getErrorMessage(error),
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setIsTicketsLoading(false);
+        }
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
@@ -291,6 +303,8 @@ export function useWorkspaceTickets({
     createTicketForm,
     filteredTickets,
     isTicketDetailLoading,
+    isTicketsLoading,
+    ticketsError,
     relatedTickets,
     refreshTickets,
     tickets,

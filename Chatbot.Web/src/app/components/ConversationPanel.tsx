@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type {
   AgentWorkflowResponse,
   ConversationDetailResponse,
@@ -12,11 +13,15 @@ import {
   formatTicketPriority,
   formatTicketStatus,
 } from '../formatters';
+import { LoadingSpinner } from './LoadingSpinner';
 
 type ConversationPanelProps = {
   filteredConversations: ConversationSummaryResponse[];
   selectedConversationId: string;
   onSelectConversationId: (conversationId: string) => void;
+  conversationsLoading?: boolean;
+  conversationsError?: string | null;
+  onRetryConversations?: () => void;
   onSelectRelatedConciergeAppId: (conciergeAppId: string) => void;
   onSelectRelatedCustomerId: (customerId: string) => void;
   isConversationDetailLoading: boolean;
@@ -34,6 +39,9 @@ export function ConversationPanel({
   filteredConversations,
   selectedConversationId,
   onSelectConversationId,
+  conversationsLoading = false,
+  conversationsError = null,
+  onRetryConversations,
   onSelectRelatedConciergeAppId,
   onSelectRelatedCustomerId,
   isConversationDetailLoading,
@@ -46,13 +54,33 @@ export function ConversationPanel({
   canManageConversations,
   onRunConversationWorkflow,
 }: ConversationPanelProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchedConversations = searchQuery
+    ? filteredConversations.filter(c => (c.customerName ?? '').toLowerCase().includes(searchQuery.toLowerCase()))
+    : filteredConversations;
   return (
     <>
       <div className="entity-card">
         <div className="entity-card-title">会话</div>
-        {filteredConversations.length > 0 ? (
-          <div className="entity-chip-list">
-            {filteredConversations.map(conversation => (
+        {conversationsLoading ? (
+          <LoadingSpinner text="正在加载会话..." />
+        ) : conversationsError ? (
+          <div className="entity-error">
+            <span>{conversationsError}</span>
+            {onRetryConversations && (
+              <button className="retry-button" type="button" onClick={onRetryConversations}>重试</button>
+            )}
+          </div>
+        ) : searchedConversations.length > 0 ? (
+          <>
+            <input
+              className="search-input"
+              placeholder="搜索会话..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.currentTarget.value)}
+            />
+            <div className="entity-chip-list">
+            {searchedConversations.map(conversation => (
               <button
                 className={
                   conversation.id === selectedConversationId
@@ -72,8 +100,11 @@ export function ConversationPanel({
               </button>
             ))}
           </div>
+          </>
+        ) : searchQuery && searchedConversations.length === 0 ? (
+          <span className="entity-placeholder">没有搜索到匹配的会话。</span>
         ) : (
-          <span className="entity-placeholder">暂无会话</span>
+          <span className="entity-placeholder">暂无会话，选择客户后即可创建。</span>
         )}
       </div>
 

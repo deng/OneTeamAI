@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import {
   TicketPriority,
   TicketStatus,
@@ -16,11 +16,15 @@ import {
   formatTicketStatus,
 } from '../formatters';
 import type { TicketDetailItem } from '../types';
+import { LoadingSpinner } from './LoadingSpinner';
 
 type TicketPanelProps = {
   filteredTickets: TicketResponse[];
   selectedTicketId: string;
   onSelectTicketId: (ticketId: string) => void;
+  ticketsLoading?: boolean;
+  ticketsError?: string | null;
+  onRetryTickets?: () => void;
   onSelectRelatedConciergeAppId: (conciergeAppId: string) => void;
   onSelectRelatedProjectId: (projectId: string) => void;
   onSelectRelatedCustomerId: (customerId: string) => void;
@@ -44,6 +48,9 @@ export function TicketPanel({
   filteredTickets,
   selectedTicketId,
   onSelectTicketId,
+  ticketsLoading = false,
+  ticketsError = null,
+  onRetryTickets,
   onSelectRelatedConciergeAppId,
   onSelectRelatedProjectId,
   onSelectRelatedCustomerId,
@@ -62,6 +69,10 @@ export function TicketPanel({
   onTicketCommentDraftChange,
   onAddComment,
 }: TicketPanelProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchedTickets = searchQuery
+    ? filteredTickets.filter(t => (t.title ?? '').toLowerCase().includes(searchQuery.toLowerCase()))
+    : filteredTickets;
   function buildDraft(ticket: TicketResponse, overrides: Partial<UpdateTicketRequest> = {}): UpdateTicketRequest {
     const ticketId = ticket.id ?? '';
     const current = ticketUpdateDrafts[ticketId];
@@ -90,9 +101,25 @@ export function TicketPanel({
     <>
       <div className="entity-card">
         <div className="entity-card-title">工单</div>
-        {filteredTickets.length > 0 ? (
-          <div className="entity-chip-list">
-            {filteredTickets.map(ticket => (
+        {ticketsLoading ? (
+          <LoadingSpinner text="正在加载工单..." />
+        ) : ticketsError ? (
+          <div className="entity-error">
+            <span>{ticketsError}</span>
+            {onRetryTickets && (
+              <button className="retry-button" type="button" onClick={onRetryTickets}>重试</button>
+            )}
+          </div>
+        ) : searchedTickets.length > 0 ? (
+          <>
+            <input
+              className="search-input"
+              placeholder="搜索工单..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.currentTarget.value)}
+            />
+            <div className="entity-chip-list">
+            {searchedTickets.map(ticket => (
               <div
                 className={ticket.id === selectedTicketId ? 'entity-chip entity-chip-selected' : 'entity-chip'}
                 key={ticket.id}
@@ -237,8 +264,11 @@ export function TicketPanel({
               </div>
             ))}
           </div>
+          </>
+        ) : searchQuery && searchedTickets.length === 0 ? (
+          <span className="entity-placeholder">没有搜索到匹配的工单。</span>
         ) : (
-          <span className="entity-placeholder">暂无工单</span>
+          <span className="entity-placeholder">暂无工单，请先在会话详情中创建。</span>
         )}
       </div>
 

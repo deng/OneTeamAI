@@ -16,6 +16,9 @@ type TicketSectionProps = {
   canManageTickets: boolean;
   createTicketForm: CreateTicketRequest;
   filteredTickets: TicketResponse[];
+  ticketsLoading?: boolean;
+  ticketsError?: string | null;
+  onRetryTickets?: () => void;
   isTicketDetailLoading: boolean;
   relatedTickets: TicketResponse[];
   selectedConversation: ConversationSummaryResponse | null;
@@ -46,6 +49,9 @@ export function TicketSection({
   canManageTickets,
   createTicketForm,
   filteredTickets,
+  ticketsLoading = false,
+  ticketsError = null,
+  onRetryTickets,
   isTicketDetailLoading,
   relatedTickets,
   selectedConversation,
@@ -163,6 +169,9 @@ export function TicketSection({
         filteredTickets={filteredTickets}
         selectedTicketId={selectedTicketId}
         onSelectTicketId={onSelectTicketId}
+        ticketsLoading={ticketsLoading}
+        ticketsError={ticketsError}
+        onRetryTickets={onRetryTickets}
         onSelectRelatedConciergeAppId={onSelectRelatedConciergeAppId}
         onSelectRelatedProjectId={onSelectRelatedProjectId}
         onSelectRelatedCustomerId={onSelectRelatedCustomerId}

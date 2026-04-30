@@ -3,6 +3,7 @@ import { ChatPanel } from './components/ChatPanel';
 import { AdminWorkspaceSection } from './components/AdminWorkspaceSection';
 import { AuthSection } from './components/AuthSection';
 import { BusinessWorkspaceSection } from './components/BusinessWorkspaceSection';
+import { CollapsibleSection } from './components/CollapsibleSection';
 import { TeamSection } from './components/TeamSection';
 import { useWorkspaceAuth } from './useWorkspaceAuth';
 import { useWorkspaceChat } from './useWorkspaceChat';
@@ -54,6 +55,8 @@ export function AppWorkspace() {
     conciergeUpdateForm,
     createConciergeForm,
     createProjectForm,
+    isResourcesLoading,
+    resourcesError,
     refreshWorkspaceData,
     projectUpdateForm,
     projects,
@@ -103,6 +106,8 @@ export function AppWorkspace() {
     createCustomerForm,
     customerUpdateForm,
     customers,
+    customersError,
+    isCustomersLoading,
     refreshCustomers,
     selectedCustomer,
     selectedCustomerId,
@@ -123,15 +128,18 @@ export function AppWorkspace() {
     conversations,
     conversationDetail,
     conversationDetailError,
+    conversationsError,
     createConversationForm,
     filteredConversations,
     isConversationDetailLoading,
+    isConversationsLoading,
     selectedConversation,
     selectedConversationId,
     setAutoRunConversationWorkflow,
     setCreateConversationForm,
     setSelectedConversationId,
     handleCreateConversation,
+    refreshConversations,
   } = useWorkspaceConversations({
     currentTeamId,
     selectedConciergeApp,
@@ -146,6 +154,8 @@ export function AppWorkspace() {
     createTicketForm,
     filteredTickets,
     isTicketDetailLoading,
+    isTicketsLoading,
+    ticketsError,
     relatedTickets,
     refreshTickets,
     tickets,
@@ -541,7 +551,8 @@ export function AppWorkspace() {
 
       <div className="workspace">
         <aside className="panel panel-side">
-          <AuthSection
+            <CollapsibleSection title="账号" storageKey="section-auth" defaultExpanded={!currentUser}>
+              <AuthSection
             busyAction={busyAction}
             currentUser={currentUser}
             feedback={feedback}
@@ -560,7 +571,9 @@ export function AppWorkspace() {
             onLoginFormChange={setLoginForm}
             onRegisterFormChange={setRegisterForm}
           />
+            </CollapsibleSection>
 
+            <CollapsibleSection title="团队" storageKey="section-team" defaultExpanded={!currentTeamId}>
           <TeamSection
             busyAction={busyAction}
             currentTeam={currentTeam}
@@ -576,9 +589,11 @@ export function AppWorkspace() {
             onTeamDescriptionChange={setTeamDescription}
             onTeamNameChange={setTeamName}
           />
+            </CollapsibleSection>
 
           {currentUser && currentTeamId ? (
-            <AdminWorkspaceSection
+            <CollapsibleSection title="管理" storageKey="section-admin">
+              <AdminWorkspaceSection
               busyAction={busyAction}
               canManageIntegrations={Boolean(currentTeamId)}
               conciergeCountByMemberId={conciergeCountByMemberId}
@@ -711,10 +726,12 @@ export function AppWorkspace() {
               teamSettingsForm={teamSettingsForm}
               userSessions={userSessions}
             />
+            </CollapsibleSection>
           ) : null}
 
           {currentUser && currentTeamId ? (
-            <BusinessWorkspaceSection
+            <CollapsibleSection title="业务" storageKey="section-business">
+              <BusinessWorkspaceSection
               autoRunConversationWorkflow={autoRunConversationWorkflow}
               autoRunTicketWorkflow={autoRunTicketWorkflow}
               busyAction={busyAction}
@@ -732,12 +749,24 @@ export function AppWorkspace() {
               allTickets={tickets}
               customerUpdateForm={customerUpdateForm}
               customers={customers}
+              customersLoading={isCustomersLoading}
+              customersError={customersError}
+              onRetryCustomers={() => currentTeamId && refreshCustomers(currentTeamId)}
               filteredConversations={filteredConversations}
+              conversationsLoading={isConversationsLoading}
+              conversationsError={conversationsError}
+              onRetryConversations={() => refreshConversations()}
               filteredTickets={filteredTickets}
+              ticketsLoading={isTicketsLoading}
+              ticketsError={ticketsError}
+              onRetryTickets={() => refreshTickets()}
               isConversationDetailLoading={isConversationDetailLoading}
               isTicketDetailLoading={isTicketDetailLoading}
               projectUpdateForm={projectUpdateForm}
               projects={projects}
+              projectsLoading={isResourcesLoading}
+              projectsError={resourcesError}
+              onRetryProjects={() => currentTeamId && refreshWorkspaceData(currentTeamId)}
               relatedTickets={relatedTickets}
               selectedConciergeApp={selectedConciergeApp}
               selectedConciergeAppId={selectedConciergeAppId}
@@ -825,6 +854,7 @@ export function AppWorkspace() {
               onProjectWorkflowFormChange={setProjectWorkflowForm}
               onCustomerWorkflowFormChange={setCustomerWorkflowForm}
             />
+            </CollapsibleSection>
           ) : null}
 
           <div className="panel-title panel-title-gap">快捷问题</div>

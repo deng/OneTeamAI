@@ -189,3 +189,30 @@ docker compose up --build
 
 - 前端：`http://localhost:8080`
 - 后端：`http://localhost:5078`
+
+## 演示数据
+
+启动后端后，可以运行以下脚本创建一套完整的演示数据：
+
+```bash
+bash scripts/seed-demo.sh
+```
+
+默认连接 `http://127.0.0.1:5078`，也可指定地址：
+
+```bash
+bash scripts/seed-demo.sh http://localhost:5078
+```
+
+脚本会依次创建：演示用户 / 团队 / AI 成员 / 项目 / 坐台程序 / 客户 / 会话（含工单）。
+
+**演示账号：** `demo@example.com` / `Demo@123456`
+
+依赖：`curl`、`jq`。
+
+## CI/CD
+
+仓库包含 GitHub Actions CI 配置（`.github/workflows/ci.yml`），在每次推送和 PR 到 main 时自动执行：
+
+- 后端编译 + 测试（6 个集成测试）
+- 前端生产构建

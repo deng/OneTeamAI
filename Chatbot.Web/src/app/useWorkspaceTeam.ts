@@ -20,6 +20,8 @@ export function useWorkspaceTeam({
   );
   const [teamName, setTeamName] = useState('');
   const [teamDescription, setTeamDescription] = useState('');
+  const [isTeamsLoading, setIsTeamsLoading] = useState(false);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
 
   const { teamsApi } = useMemo(() => createWorkspaceApis(token), [token]);
 
@@ -37,30 +39,39 @@ export function useWorkspaceTeam({
     }
 
     let cancelled = false;
+    setIsTeamsLoading(true);
+    setTeamsError(null);
 
     void (async () => {
-      const nextTeams = await teamsApi.listMyTeams();
+      try {
+        const nextTeams = await teamsApi.listMyTeams();
 
-      if (cancelled) {
-        return;
-      }
+        if (cancelled) {
+          return;
+        }
 
-      setTeams(nextTeams);
-      if (nextTeams.length === 0) {
-        setCurrentTeamId('');
-        return;
-      }
+        setTeams(nextTeams);
+        if (nextTeams.length === 0) {
+          setCurrentTeamId('');
+          return;
+        }
 
-      const hasExisting = nextTeams.some(team => team.id === currentTeamId);
-      if (!hasExisting) {
-        setCurrentTeamId(nextTeams[0].id ?? '');
+        const hasExisting = nextTeams.some(team => team.id === currentTeamId);
+        if (!hasExisting) {
+          setCurrentTeamId(nextTeams[0].id ?? '');
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setTeamsError(error instanceof Error ? error.message : '团队数据加载失败。');
+          setTeams([]);
+          setCurrentTeamId('');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsTeamsLoading(false);
+        }
       }
-    })().catch(() => {
-      if (!cancelled) {
-        setTeams([]);
-        setCurrentTeamId('');
-      }
-    });
+    })();
 
     return () => {
       cancelled = true;
@@ -111,6 +122,8 @@ export function useWorkspaceTeam({
   return {
     currentTeam,
     currentTeamId,
+    isTeamsLoading,
+    teamsError,
     refreshTeams,
     teamDescription,
     teamName,

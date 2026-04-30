@@ -41,12 +41,24 @@ type BusinessWorkspaceSectionProps = {
   allTickets: TicketResponse[];
   customerUpdateForm: UpdateCustomerRequest;
   customers: CustomerResponse[];
+  customersLoading?: boolean;
+  customersError?: string | null;
+  onRetryCustomers?: () => void;
   filteredConversations: ConversationSummaryResponse[];
+  conversationsLoading?: boolean;
+  conversationsError?: string | null;
+  onRetryConversations?: () => void;
   filteredTickets: TicketResponse[];
+  ticketsLoading?: boolean;
+  ticketsError?: string | null;
+  onRetryTickets?: () => void;
   isConversationDetailLoading: boolean;
   isTicketDetailLoading: boolean;
   projectUpdateForm: UpdateProjectRequest;
   projects: ProjectResponse[];
+  projectsLoading?: boolean;
+  projectsError?: string | null;
+  onRetryProjects?: () => void;
   relatedTickets: TicketResponse[];
   selectedConciergeApp: ConciergeAppResponse | null | undefined;
   selectedConciergeAppId: string;
@@ -129,12 +141,24 @@ export function BusinessWorkspaceSection({
   allTickets,
   customerUpdateForm,
   customers,
+  customersLoading = false,
+  customersError = null,
+  onRetryCustomers,
   filteredConversations,
+  conversationsLoading = false,
+  conversationsError = null,
+  onRetryConversations,
   filteredTickets,
+  ticketsLoading = false,
+  ticketsError = null,
+  onRetryTickets,
   isConversationDetailLoading,
   isTicketDetailLoading,
   projectUpdateForm,
   projects,
+  projectsLoading = false,
+  projectsError = null,
+  onRetryProjects,
   relatedTickets,
   selectedConciergeApp,
   selectedConciergeAppId,
@@ -211,6 +235,9 @@ export function BusinessWorkspaceSection({
         customers={customers}
         projectUpdateForm={projectUpdateForm}
         projects={projects}
+        projectsLoading={projectsLoading}
+        projectsError={projectsError}
+        onRetryProjects={onRetryProjects}
         selectedConciergeApp={selectedConciergeApp}
         selectedConciergeAppId={selectedConciergeAppId}
         selectedProject={selectedProject}
@@ -253,8 +280,17 @@ export function BusinessWorkspaceSection({
         createTicketForm={createTicketForm}
         customerUpdateForm={customerUpdateForm}
         customers={customers}
+        customersLoading={customersLoading}
+        customersError={customersError}
+        onRetryCustomers={onRetryCustomers}
         filteredConversations={filteredConversations}
+        conversationsLoading={conversationsLoading}
+        conversationsError={conversationsError}
+        onRetryConversations={onRetryConversations}
         filteredTickets={filteredTickets}
+        ticketsLoading={ticketsLoading}
+        ticketsError={ticketsError}
+        onRetryTickets={onRetryTickets}
         isConversationDetailLoading={isConversationDetailLoading}
         isTicketDetailLoading={isTicketDetailLoading}
         projects={projects}

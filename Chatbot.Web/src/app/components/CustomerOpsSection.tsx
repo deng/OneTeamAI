@@ -33,8 +33,17 @@ type CustomerOpsSectionProps = {
   createTicketForm: CreateTicketRequest;
   customerUpdateForm: UpdateCustomerRequest;
   customers: CustomerResponse[];
+  customersLoading?: boolean;
+  customersError?: string | null;
+  onRetryCustomers?: () => void;
   filteredConversations: ConversationSummaryResponse[];
+  conversationsLoading?: boolean;
+  conversationsError?: string | null;
+  onRetryConversations?: () => void;
   filteredTickets: TicketResponse[];
+  ticketsLoading?: boolean;
+  ticketsError?: string | null;
+  onRetryTickets?: () => void;
   isConversationDetailLoading: boolean;
   isTicketDetailLoading: boolean;
   projects: ProjectResponse[];
@@ -93,8 +102,17 @@ export function CustomerOpsSection({
   createTicketForm,
   customerUpdateForm,
   customers,
+  customersLoading = false,
+  customersError = null,
+  onRetryCustomers,
   filteredConversations,
+  conversationsLoading = false,
+  conversationsError = null,
+  onRetryConversations,
   filteredTickets,
+  ticketsLoading = false,
+  ticketsError = null,
+  onRetryTickets,
   isConversationDetailLoading,
   isTicketDetailLoading,
   projects,
@@ -148,6 +166,9 @@ export function CustomerOpsSection({
         createCustomerForm={createCustomerForm}
         customerUpdateForm={customerUpdateForm}
         customers={customers}
+        customersLoading={customersLoading}
+        customersError={customersError}
+        onRetryCustomers={onRetryCustomers}
         filteredConversations={filteredConversations}
         filteredTickets={filteredTickets}
         projects={projects}
@@ -171,6 +192,9 @@ export function CustomerOpsSection({
         conversationDetailError={conversationDetailError}
         createConversationForm={createConversationForm}
         filteredConversations={filteredConversations}
+        conversationsLoading={conversationsLoading}
+        conversationsError={conversationsError}
+        onRetryConversations={onRetryConversations}
         isConversationDetailLoading={isConversationDetailLoading}
         relatedTickets={relatedTickets}
         selectedConversation={selectedConversation}
@@ -192,6 +216,9 @@ export function CustomerOpsSection({
         canManageTickets={canManage}
         createTicketForm={createTicketForm}
         filteredTickets={filteredTickets}
+        ticketsLoading={ticketsLoading}
+        ticketsError={ticketsError}
+        onRetryTickets={onRetryTickets}
         isTicketDetailLoading={isTicketDetailLoading}
         relatedTickets={relatedTickets}
         selectedConversation={selectedConversation}

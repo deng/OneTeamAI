@@ -45,6 +45,8 @@ export function useWorkspaceConversations({
   const [conversationDetail, setConversationDetail] = useState<ConversationDetailResponse | null>(null);
   const [conversationDetailError, setConversationDetailError] = useState<string | null>(null);
   const [isConversationDetailLoading, setIsConversationDetailLoading] = useState(false);
+  const [isConversationsLoading, setIsConversationsLoading] = useState(false);
+  const [conversationsError, setConversationsError] = useState<string | null>(null);
   const [createConversationForm, setCreateConversationForm] =
     useState<CreateConversationRequest>(emptyCreateConversationForm);
   const [autoRunConversationWorkflow, setAutoRunConversationWorkflow] = useState(false);
@@ -86,30 +88,39 @@ export function useWorkspaceConversations({
 
     let cancelled = false;
     const conciergeAppId = selectedConciergeApp.id;
+    setIsConversationsLoading(true);
+    setConversationsError(null);
 
     void (async () => {
-      const nextConversations = await conversationsApi.listConversations({
-        conciergeAppId,
-      });
-
-      if (cancelled) {
-        return;
-      }
-
-      setConversations(nextConversations);
-      setSelectedConversationId(current =>
-        nextConversations.some(conversation => conversation.id === current)
-          ? current
-          : (nextConversations[0]?.id ?? ''),
-      );
-    })().catch(error => {
-      if (!cancelled) {
-        setFeedback({
-          kind: 'error',
-          text: getErrorMessage(error),
+      try {
+        const nextConversations = await conversationsApi.listConversations({
+          conciergeAppId,
         });
+
+        if (cancelled) {
+          return;
+        }
+
+        setConversations(nextConversations);
+        setSelectedConversationId(current =>
+          nextConversations.some(conversation => conversation.id === current)
+            ? current
+            : (nextConversations[0]?.id ?? ''),
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setConversationsError(getErrorMessage(error));
+          setFeedback({
+            kind: 'error',
+            text: getErrorMessage(error),
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setIsConversationsLoading(false);
+        }
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
@@ -219,6 +230,8 @@ export function useWorkspaceConversations({
     createConversationForm,
     filteredConversations,
     isConversationDetailLoading,
+    isConversationsLoading,
+    conversationsError,
     autoRunConversationWorkflow,
     selectedConversation,
     selectedConversationId,
@@ -226,5 +239,6 @@ export function useWorkspaceConversations({
     setCreateConversationForm,
     setSelectedConversationId,
     handleCreateConversation,
+    refreshConversations,
   };
 }

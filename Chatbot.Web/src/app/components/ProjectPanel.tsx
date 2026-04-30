@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import type {
   ConciergeAppResponse,
   ConversationSummaryResponse,
@@ -14,11 +14,15 @@ import {
   formatNullableText,
   formatProjectStatus,
 } from '../formatters';
+import { LoadingSpinner } from './LoadingSpinner';
 
 type ProjectPanelProps = {
   projects: ProjectResponse[];
   selectedProjectId: string;
   onSelectProjectId: (projectId: string) => void;
+  projectsLoading?: boolean;
+  projectsError?: string | null;
+  onRetryProjects?: () => void;
   conciergeApps: ConciergeAppResponse[];
   onSelectRelatedConciergeAppId: (conciergeAppId: string) => void;
   conversations: ConversationSummaryResponse[];
@@ -42,6 +46,9 @@ export function ProjectPanel({
   projects,
   selectedProjectId,
   onSelectProjectId,
+  projectsLoading = false,
+  projectsError = null,
+  onRetryProjects,
   conciergeApps,
   onSelectRelatedConciergeAppId,
   conversations,
@@ -60,6 +67,10 @@ export function ProjectPanel({
   onRunProjectWorkflow,
   onSaveProject,
 }: ProjectPanelProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const filteredProjects = searchQuery
+    ? projects.filter(p => (p.name ?? '').toLowerCase().includes(searchQuery.toLowerCase()))
+    : projects;
   const relatedConciergeApps = conciergeApps.filter(app => app.projectId === selectedProject?.id);
   const relatedCustomers = customers.filter(customer => customer.projectId === selectedProject?.id);
   const relatedConversationIds = new Set(
@@ -74,9 +85,25 @@ export function ProjectPanel({
     <>
       <div className="entity-card">
         <div className="entity-card-title">项目</div>
-        {projects.length > 0 ? (
-          <div className="entity-chip-list">
-            {projects.map(project => (
+        {projectsLoading ? (
+          <LoadingSpinner text="正在加载项目..." />
+        ) : projectsError ? (
+          <div className="entity-error">
+            <span>{projectsError}</span>
+            {onRetryProjects && (
+              <button className="retry-button" type="button" onClick={onRetryProjects}>重试</button>
+            )}
+          </div>
+        ) : filteredProjects.length > 0 ? (
+          <>
+            <input
+              className="search-input"
+              placeholder="搜索项目..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.currentTarget.value)}
+            />
+            <div className="entity-chip-list">
+            {filteredProjects.map(project => (
               <button
                 className={
                   project.id === selectedProjectId
@@ -101,12 +128,15 @@ export function ProjectPanel({
                   参与成员：{project.participantCount ?? 0} · 客户：{project.customerCount ?? 0} · 工单：
                   {project.ticketCount ?? 0}
                 </span>
-                <span>摘要：{formatNullableText(project.summary, '暂无项目摘要')}</span>
+                <span>摘要：{formatNullableText(project.summary, '暂无项目，请先在左侧表单中创建。摘要')}</span>
               </button>
             ))}
           </div>
+          </>
+        ) : searchQuery && filteredProjects.length === 0 ? (
+          <span className="entity-placeholder">没有搜索到匹配的项目。</span>
         ) : (
-          <span className="entity-placeholder">暂无项目</span>
+          <span className="entity-placeholder">暂无项目，请先在左侧表单中创建。</span>
         )}
       </div>
 

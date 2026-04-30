@@ -29,6 +29,9 @@ type ProjectOpsSectionProps = {
   customers: CustomerResponse[];
   projectUpdateForm: UpdateProjectRequest;
   projects: ProjectResponse[];
+  projectsLoading?: boolean;
+  projectsError?: string | null;
+  onRetryProjects?: () => void;
   selectedConciergeApp: ConciergeAppResponse | null | undefined;
   selectedConciergeAppId: string;
   selectedProject: ProjectResponse | null;
@@ -70,6 +73,9 @@ export function ProjectOpsSection({
   customers,
   projectUpdateForm,
   projects,
+  projectsLoading = false,
+  projectsError = null,
+  onRetryProjects,
   selectedConciergeApp,
   selectedConciergeAppId,
   selectedProject,
@@ -110,6 +116,9 @@ export function ProjectOpsSection({
         customers={customers}
         projectUpdateForm={projectUpdateForm}
         projects={projects}
+        projectsLoading={projectsLoading}
+        projectsError={projectsError}
+        onRetryProjects={onRetryProjects}
         selectedProject={selectedProject}
         selectedProjectId={selectedProjectId}
         selectedProjectParticipants={selectedProjectParticipants}
