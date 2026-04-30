@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import {
   CustomerFollowUpStatus,
   type ConversationSummaryResponse,
@@ -15,11 +15,15 @@ import {
   formatNullableText,
   formatRecordSourceType,
 } from '../formatters';
+import { LoadingSpinner } from './LoadingSpinner';
 
 type CustomerPanelProps = {
   customers: CustomerResponse[];
   selectedCustomerId: string;
   onSelectCustomerId: (customerId: string) => void;
+  customersLoading?: boolean;
+  customersError?: string | null;
+  onRetryCustomers?: () => void;
   filteredConversations: ConversationSummaryResponse[];
   filteredTickets: TicketResponse[];
   onSelectRelatedConversationId: (conversationId: string) => void;
@@ -38,6 +42,9 @@ export function CustomerPanel({
   customers,
   selectedCustomerId,
   onSelectCustomerId,
+  customersLoading = false,
+  customersError = null,
+  onRetryCustomers,
   filteredConversations,
   filteredTickets,
   onSelectRelatedConversationId,
@@ -51,13 +58,38 @@ export function CustomerPanel({
   canManageCustomers,
   onSaveCustomer,
 }: CustomerPanelProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const filteredCustomers = searchQuery
+    ? customers.filter(
+        c =>
+          (c.displayName ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (c.companyName ?? '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (c.email ?? '').toLowerCase().includes(searchQuery.toLowerCase()),
+      )
+    : customers;
   return (
     <>
       <div className="entity-card">
         <div className="entity-card-title">客户</div>
-        {customers.length > 0 ? (
-          <div className="entity-chip-list">
-            {customers.map(customer => (
+        {customersLoading ? (
+          <LoadingSpinner text="正在加载客户..." />
+        ) : customersError ? (
+          <div className="entity-error">
+            <span>{customersError}</span>
+            {onRetryCustomers && (
+              <button className="retry-button" type="button" onClick={onRetryCustomers}>重试</button>
+            )}
+          </div>
+        ) : filteredCustomers.length > 0 ? (
+          <>
+            <input
+              className="search-input"
+              placeholder="搜索客户..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.currentTarget.value)}
+            />
+            <div className="entity-chip-list">
+            {filteredCustomers.map(customer => (
               <button
                 className={
                   customer.id === selectedCustomerId
@@ -90,8 +122,11 @@ export function CustomerPanel({
               </button>
             ))}
           </div>
+          </>
+        ) : searchQuery && filteredCustomers.length === 0 ? (
+          <span className="entity-placeholder">没有搜索到匹配的客户。</span>
         ) : (
-          <span className="entity-placeholder">暂无客户</span>
+          <span className="entity-placeholder">暂无客户，请先在左侧表单中创建。</span>
         )}
       </div>
 

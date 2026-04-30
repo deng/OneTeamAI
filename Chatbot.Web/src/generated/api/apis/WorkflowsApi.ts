@@ -17,15 +17,21 @@ import * as runtime from '../runtime';
 import type {
   AgentWorkflowResponse,
   ApiErrorResponse,
+  RunAgentWorkflowRequest,
   RunTicketWorkflowRequest,
+  WorkflowTemplateResponse,
 } from '../models/index';
 import {
     AgentWorkflowResponseFromJSON,
     AgentWorkflowResponseToJSON,
     ApiErrorResponseFromJSON,
     ApiErrorResponseToJSON,
+    RunAgentWorkflowRequestFromJSON,
+    RunAgentWorkflowRequestToJSON,
     RunTicketWorkflowRequestFromJSON,
     RunTicketWorkflowRequestToJSON,
+    WorkflowTemplateResponseFromJSON,
+    WorkflowTemplateResponseToJSON,
 } from '../models/index';
 
 export interface GetAgentWorkflowRequest {
@@ -36,6 +42,24 @@ export interface GetAgentWorkflowRequest {
 export interface ListAgentWorkflowsRequest {
     teamId: string;
     ticketId?: string;
+    conversationId?: string;
+    projectId?: string;
+}
+
+export interface ListWorkflowTemplatesRequest {
+    scope?: string;
+}
+
+export interface RunConversationWorkflowRequest {
+    teamId: string;
+    conversationId: string;
+    runAgentWorkflowRequest: RunAgentWorkflowRequest;
+}
+
+export interface RunProjectWorkflowRequest {
+    teamId: string;
+    projectId: string;
+    runAgentWorkflowRequest: RunAgentWorkflowRequest;
 }
 
 export interface RunTicketWorkflowOperationRequest {
@@ -125,6 +149,14 @@ export class WorkflowsApi extends runtime.BaseAPI {
             queryParameters['ticketId'] = requestParameters['ticketId'];
         }
 
+        if (requestParameters['conversationId'] != null) {
+            queryParameters['conversationId'] = requestParameters['conversationId'];
+        }
+
+        if (requestParameters['projectId'] != null) {
+            queryParameters['projectId'] = requestParameters['projectId'];
+        }
+
         const headerParameters: runtime.HTTPHeaders = {};
 
         if (this.configuration && this.configuration.accessToken) {
@@ -160,6 +192,191 @@ export class WorkflowsApi extends runtime.BaseAPI {
      */
     async listAgentWorkflows(requestParameters: ListAgentWorkflowsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AgentWorkflowResponse>> {
         const response = await this.listAgentWorkflowsRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for listWorkflowTemplates without sending the request
+     */
+    async listWorkflowTemplatesRequestOpts(requestParameters: ListWorkflowTemplatesRequest): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        if (requestParameters['scope'] != null) {
+            queryParameters['scope'] = requestParameters['scope'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/workflow-templates`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     */
+    async listWorkflowTemplatesRaw(requestParameters: ListWorkflowTemplatesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WorkflowTemplateResponse>>> {
+        const requestOptions = await this.listWorkflowTemplatesRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(WorkflowTemplateResponseFromJSON));
+    }
+
+    /**
+     */
+    async listWorkflowTemplates(requestParameters: ListWorkflowTemplatesRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WorkflowTemplateResponse>> {
+        const response = await this.listWorkflowTemplatesRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for runConversationWorkflow without sending the request
+     */
+    async runConversationWorkflowRequestOpts(requestParameters: RunConversationWorkflowRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling runConversationWorkflow().'
+            );
+        }
+
+        if (requestParameters['conversationId'] == null) {
+            throw new runtime.RequiredError(
+                'conversationId',
+                'Required parameter "conversationId" was null or undefined when calling runConversationWorkflow().'
+            );
+        }
+
+        if (requestParameters['runAgentWorkflowRequest'] == null) {
+            throw new runtime.RequiredError(
+                'runAgentWorkflowRequest',
+                'Required parameter "runAgentWorkflowRequest" was null or undefined when calling runConversationWorkflow().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/conversations/{conversationId}/workflows`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"conversationId"}}`, encodeURIComponent(String(requestParameters['conversationId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: RunAgentWorkflowRequestToJSON(requestParameters['runAgentWorkflowRequest']),
+        };
+    }
+
+    /**
+     */
+    async runConversationWorkflowRaw(requestParameters: RunConversationWorkflowRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AgentWorkflowResponse>> {
+        const requestOptions = await this.runConversationWorkflowRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AgentWorkflowResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async runConversationWorkflow(requestParameters: RunConversationWorkflowRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AgentWorkflowResponse> {
+        const response = await this.runConversationWorkflowRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for runProjectWorkflow without sending the request
+     */
+    async runProjectWorkflowRequestOpts(requestParameters: RunProjectWorkflowRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling runProjectWorkflow().'
+            );
+        }
+
+        if (requestParameters['projectId'] == null) {
+            throw new runtime.RequiredError(
+                'projectId',
+                'Required parameter "projectId" was null or undefined when calling runProjectWorkflow().'
+            );
+        }
+
+        if (requestParameters['runAgentWorkflowRequest'] == null) {
+            throw new runtime.RequiredError(
+                'runAgentWorkflowRequest',
+                'Required parameter "runAgentWorkflowRequest" was null or undefined when calling runProjectWorkflow().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/projects/{projectId}/workflows`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"projectId"}}`, encodeURIComponent(String(requestParameters['projectId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: RunAgentWorkflowRequestToJSON(requestParameters['runAgentWorkflowRequest']),
+        };
+    }
+
+    /**
+     */
+    async runProjectWorkflowRaw(requestParameters: RunProjectWorkflowRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AgentWorkflowResponse>> {
+        const requestOptions = await this.runProjectWorkflowRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AgentWorkflowResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async runProjectWorkflow(requestParameters: RunProjectWorkflowRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AgentWorkflowResponse> {
+        const response = await this.runProjectWorkflowRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

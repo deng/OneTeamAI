@@ -9,6 +9,10 @@ Name | Type
 `status` | [TicketStatus](TicketStatus.md)
 `priority` | [TicketPriority](TicketPriority.md)
 `assignedMemberId` | string
+`category` | string
+`dueAt` | Date
+`resolutionSummary` | string
+`activityNote` | string
 
 ## Example
 
@@ -20,6 +24,10 @@ const example = {
   "status": null,
   "priority": null,
   "assignedMemberId": null,
+  "category": null,
+  "dueAt": null,
+  "resolutionSummary": null,
+  "activityNote": null,
 } satisfies UpdateTicketRequest
 
 console.log(example)

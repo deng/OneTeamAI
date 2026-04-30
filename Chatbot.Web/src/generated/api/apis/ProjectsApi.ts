@@ -18,6 +18,7 @@ import type {
   ApiErrorResponse,
   CreateProjectRequest,
   ProjectResponse,
+  UpdateProjectRequest,
 } from '../models/index';
 import {
     ApiErrorResponseFromJSON,
@@ -26,6 +27,8 @@ import {
     CreateProjectRequestToJSON,
     ProjectResponseFromJSON,
     ProjectResponseToJSON,
+    UpdateProjectRequestFromJSON,
+    UpdateProjectRequestToJSON,
 } from '../models/index';
 
 export interface CreateProjectOperationRequest {
@@ -35,6 +38,12 @@ export interface CreateProjectOperationRequest {
 
 export interface ListProjectsRequest {
     teamId: string;
+}
+
+export interface UpdateProjectOperationRequest {
+    teamId: string;
+    projectId: string;
+    updateProjectRequest: UpdateProjectRequest;
 }
 
 /**
@@ -151,6 +160,75 @@ export class ProjectsApi extends runtime.BaseAPI {
      */
     async listProjects(requestParameters: ListProjectsRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<ProjectResponse>> {
         const response = await this.listProjectsRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for updateProject without sending the request
+     */
+    async updateProjectRequestOpts(requestParameters: UpdateProjectOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling updateProject().'
+            );
+        }
+
+        if (requestParameters['projectId'] == null) {
+            throw new runtime.RequiredError(
+                'projectId',
+                'Required parameter "projectId" was null or undefined when calling updateProject().'
+            );
+        }
+
+        if (requestParameters['updateProjectRequest'] == null) {
+            throw new runtime.RequiredError(
+                'updateProjectRequest',
+                'Required parameter "updateProjectRequest" was null or undefined when calling updateProject().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/projects/{projectId}`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"projectId"}}`, encodeURIComponent(String(requestParameters['projectId'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: UpdateProjectRequestToJSON(requestParameters['updateProjectRequest']),
+        };
+    }
+
+    /**
+     */
+    async updateProjectRaw(requestParameters: UpdateProjectOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProjectResponse>> {
+        const requestOptions = await this.updateProjectRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async updateProject(requestParameters: UpdateProjectOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProjectResponse> {
+        const response = await this.updateProjectRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

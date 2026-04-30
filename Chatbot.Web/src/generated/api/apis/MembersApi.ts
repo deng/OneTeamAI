@@ -15,21 +15,30 @@
 
 import * as runtime from '../runtime';
 import type {
+  AiMemberTemplateResponse,
   ApiErrorResponse,
   CreateAiMemberRequest,
+  CreateAiMemberTemplateRequest,
   CreateHumanMemberRequest,
   MemberResponse,
+  UpdateAiMemberTemplateRequest,
   UpdateMemberRequest,
 } from '../models/index';
 import {
+    AiMemberTemplateResponseFromJSON,
+    AiMemberTemplateResponseToJSON,
     ApiErrorResponseFromJSON,
     ApiErrorResponseToJSON,
     CreateAiMemberRequestFromJSON,
     CreateAiMemberRequestToJSON,
+    CreateAiMemberTemplateRequestFromJSON,
+    CreateAiMemberTemplateRequestToJSON,
     CreateHumanMemberRequestFromJSON,
     CreateHumanMemberRequestToJSON,
     MemberResponseFromJSON,
     MemberResponseToJSON,
+    UpdateAiMemberTemplateRequestFromJSON,
+    UpdateAiMemberTemplateRequestToJSON,
     UpdateMemberRequestFromJSON,
     UpdateMemberRequestToJSON,
 } from '../models/index';
@@ -39,9 +48,24 @@ export interface CreateAiMemberOperationRequest {
     createAiMemberRequest: CreateAiMemberRequest;
 }
 
+export interface CreateAiMemberTemplateOperationRequest {
+    teamId: string;
+    createAiMemberTemplateRequest: CreateAiMemberTemplateRequest;
+}
+
 export interface CreateHumanMemberOperationRequest {
     teamId: string;
     createHumanMemberRequest: CreateHumanMemberRequest;
+}
+
+export interface DisableAiMemberTemplateRequest {
+    teamId: string;
+    templateId: string;
+}
+
+export interface ListAiMemberTemplatesRequest {
+    teamId?: string;
+    includeDisabled?: boolean;
 }
 
 export interface ListTeamMembersRequest {
@@ -51,6 +75,12 @@ export interface ListTeamMembersRequest {
 export interface RemoveMemberRequest {
     teamId: string;
     memberId: string;
+}
+
+export interface UpdateAiMemberTemplateOperationRequest {
+    teamId: string;
+    templateId: string;
+    updateAiMemberTemplateRequest: UpdateAiMemberTemplateRequest;
 }
 
 export interface UpdateMemberOperationRequest {
@@ -126,6 +156,67 @@ export class MembersApi extends runtime.BaseAPI {
     }
 
     /**
+     * Creates request options for createAiMemberTemplate without sending the request
+     */
+    async createAiMemberTemplateRequestOpts(requestParameters: CreateAiMemberTemplateOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling createAiMemberTemplate().'
+            );
+        }
+
+        if (requestParameters['createAiMemberTemplateRequest'] == null) {
+            throw new runtime.RequiredError(
+                'createAiMemberTemplateRequest',
+                'Required parameter "createAiMemberTemplateRequest" was null or undefined when calling createAiMemberTemplate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/ai-member-templates`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: CreateAiMemberTemplateRequestToJSON(requestParameters['createAiMemberTemplateRequest']),
+        };
+    }
+
+    /**
+     */
+    async createAiMemberTemplateRaw(requestParameters: CreateAiMemberTemplateOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AiMemberTemplateResponse>> {
+        const requestOptions = await this.createAiMemberTemplateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AiMemberTemplateResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async createAiMemberTemplate(requestParameters: CreateAiMemberTemplateOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AiMemberTemplateResponse> {
+        const response = await this.createAiMemberTemplateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * Creates request options for createHumanMember without sending the request
      */
     async createHumanMemberRequestOpts(requestParameters: CreateHumanMemberOperationRequest): Promise<runtime.RequestOpts> {
@@ -183,6 +274,116 @@ export class MembersApi extends runtime.BaseAPI {
      */
     async createHumanMember(requestParameters: CreateHumanMemberOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<MemberResponse> {
         const response = await this.createHumanMemberRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for disableAiMemberTemplate without sending the request
+     */
+    async disableAiMemberTemplateRequestOpts(requestParameters: DisableAiMemberTemplateRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling disableAiMemberTemplate().'
+            );
+        }
+
+        if (requestParameters['templateId'] == null) {
+            throw new runtime.RequiredError(
+                'templateId',
+                'Required parameter "templateId" was null or undefined when calling disableAiMemberTemplate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/ai-member-templates/{templateId}`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"templateId"}}`, encodeURIComponent(String(requestParameters['templateId'])));
+
+        return {
+            path: urlPath,
+            method: 'DELETE',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     */
+    async disableAiMemberTemplateRaw(requestParameters: DisableAiMemberTemplateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AiMemberTemplateResponse>> {
+        const requestOptions = await this.disableAiMemberTemplateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AiMemberTemplateResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async disableAiMemberTemplate(requestParameters: DisableAiMemberTemplateRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AiMemberTemplateResponse> {
+        const response = await this.disableAiMemberTemplateRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for listAiMemberTemplates without sending the request
+     */
+    async listAiMemberTemplatesRequestOpts(requestParameters: ListAiMemberTemplatesRequest): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        if (requestParameters['teamId'] != null) {
+            queryParameters['teamId'] = requestParameters['teamId'];
+        }
+
+        if (requestParameters['includeDisabled'] != null) {
+            queryParameters['includeDisabled'] = requestParameters['includeDisabled'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/ai-member-templates`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     */
+    async listAiMemberTemplatesRaw(requestParameters: ListAiMemberTemplatesRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<AiMemberTemplateResponse>>> {
+        const requestOptions = await this.listAiMemberTemplatesRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(AiMemberTemplateResponseFromJSON));
+    }
+
+    /**
+     */
+    async listAiMemberTemplates(requestParameters: ListAiMemberTemplatesRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<AiMemberTemplateResponse>> {
+        const response = await this.listAiMemberTemplatesRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
@@ -293,6 +494,75 @@ export class MembersApi extends runtime.BaseAPI {
      */
     async removeMember(requestParameters: RemoveMemberRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
         await this.removeMemberRaw(requestParameters, initOverrides);
+    }
+
+    /**
+     * Creates request options for updateAiMemberTemplate without sending the request
+     */
+    async updateAiMemberTemplateRequestOpts(requestParameters: UpdateAiMemberTemplateOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling updateAiMemberTemplate().'
+            );
+        }
+
+        if (requestParameters['templateId'] == null) {
+            throw new runtime.RequiredError(
+                'templateId',
+                'Required parameter "templateId" was null or undefined when calling updateAiMemberTemplate().'
+            );
+        }
+
+        if (requestParameters['updateAiMemberTemplateRequest'] == null) {
+            throw new runtime.RequiredError(
+                'updateAiMemberTemplateRequest',
+                'Required parameter "updateAiMemberTemplateRequest" was null or undefined when calling updateAiMemberTemplate().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/ai-member-templates/{templateId}`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"templateId"}}`, encodeURIComponent(String(requestParameters['templateId'])));
+
+        return {
+            path: urlPath,
+            method: 'PUT',
+            headers: headerParameters,
+            query: queryParameters,
+            body: UpdateAiMemberTemplateRequestToJSON(requestParameters['updateAiMemberTemplateRequest']),
+        };
+    }
+
+    /**
+     */
+    async updateAiMemberTemplateRaw(requestParameters: UpdateAiMemberTemplateOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<AiMemberTemplateResponse>> {
+        const requestOptions = await this.updateAiMemberTemplateRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => AiMemberTemplateResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async updateAiMemberTemplate(requestParameters: UpdateAiMemberTemplateOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AiMemberTemplateResponse> {
+        const response = await this.updateAiMemberTemplateRaw(requestParameters, initOverrides);
+        return await response.value();
     }
 
     /**

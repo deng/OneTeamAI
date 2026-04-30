@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  AgentWorkflowTriggerMode,
   TicketPriority,
   TicketStatus,
   type ConversationSummaryResponse,
@@ -30,6 +31,7 @@ function buildDraft(ticket: TicketResponse): UpdateTicketRequest {
     assignedMemberId: ticket.assignedMemberId ?? undefined,
     category: ticket.category ?? '',
     dueAt: ticket.dueAt ?? undefined,
+    resolutionSummary: ticket.resolutionSummary ?? '',
     activityNote: '',
   };
 }
@@ -56,9 +58,12 @@ export function useWorkspaceTickets({
   const [ticketUpdateDrafts, setTicketUpdateDrafts] = useState<Record<string, UpdateTicketRequest>>({});
   const [ticketDetail, setTicketDetail] = useState<TicketDetailItem | null>(null);
   const [isTicketDetailLoading, setIsTicketDetailLoading] = useState(false);
+  const [isTicketsLoading, setIsTicketsLoading] = useState(false);
+  const [ticketsError, setTicketsError] = useState<string | null>(null);
   const [ticketDetailError, setTicketDetailError] = useState<string | null>(null);
   const [ticketCommentDraft, setTicketCommentDraft] = useState('');
   const [createTicketForm, setCreateTicketForm] = useState<CreateTicketRequest>(emptyCreateTicketForm);
+  const [autoRunTicketWorkflow, setAutoRunTicketWorkflow] = useState(false);
 
   const { ticketsApi } = useMemo(() => createWorkspaceApis(token), [token]);
   const selectedTicket = tickets.find(ticket => ticket.id === selectedTicketId) ?? null;
@@ -83,30 +88,40 @@ export function useWorkspaceTickets({
 
     let cancelled = false;
 
+    setIsTicketsLoading(true);
+    setTicketsError(null);
+
     void (async () => {
-      const nextTickets = await ticketsApi.listTickets({ teamId: currentTeamId });
+      try {
+        const nextTickets = await ticketsApi.listTickets({ teamId: currentTeamId });
 
-      if (cancelled) {
-        return;
-      }
+        if (cancelled) {
+          return;
+        }
 
-      setTickets(nextTickets);
-      setTicketUpdateDrafts(
-        Object.fromEntries(nextTickets.filter(ticket => ticket.id).map(ticket => [ticket.id as string, buildDraft(ticket)])),
-      );
-      setSelectedTicketId(current =>
-        nextTickets.some(ticket => ticket.id === current)
-          ? current
-          : (nextTickets[0]?.id ?? ''),
-      );
-    })().catch(error => {
-      if (!cancelled) {
-        setFeedback({
-          kind: 'error',
-          text: getErrorMessage(error),
-        });
+        setTickets(nextTickets);
+        setTicketUpdateDrafts(
+          Object.fromEntries(nextTickets.filter(ticket => ticket.id).map(ticket => [ticket.id as string, buildDraft(ticket)])),
+        );
+        setSelectedTicketId(current =>
+          nextTickets.some(ticket => ticket.id === current)
+            ? current
+            : (nextTickets[0]?.id ?? ''),
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setTicketsError(getErrorMessage(error));
+          setFeedback({
+            kind: 'error',
+            text: getErrorMessage(error),
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setIsTicketsLoading(false);
+        }
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
@@ -199,12 +214,26 @@ export function useWorkspaceTickets({
         createTicketRequest: createTicketForm,
       });
 
+      if (autoRunTicketWorkflow && currentTeamId && created.id) {
+        await fetchJson(`/api/teams/${currentTeamId}/tickets/${created.id}/workflows`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token ?? ''}`,
+          },
+          body: JSON.stringify({
+            goal: `围绕新工单“${created.title ?? createTicketForm.title ?? '客户工单'}”自动完成分诊、协调与推进建议。`,
+            triggerMode: AgentWorkflowTriggerMode.NUMBER_1,
+          }),
+        });
+      }
+
       await refreshTickets();
       setSelectedTicketId(created.id ?? '');
       setCreateTicketForm(emptyCreateTicketForm());
       setFeedback({
         kind: 'success',
-        text: `已创建工单 ${created.title ?? ''}。`,
+        text: autoRunTicketWorkflow ? `已创建工单 ${created.title ?? ''}，并自动启动协作。` : `已创建工单 ${created.title ?? ''}。`,
       });
     });
   }
@@ -270,13 +299,18 @@ export function useWorkspaceTickets({
   }
 
   return {
+    autoRunTicketWorkflow,
     createTicketForm,
     filteredTickets,
     isTicketDetailLoading,
+    isTicketsLoading,
+    ticketsError,
     relatedTickets,
+    refreshTickets,
     tickets,
     selectedTicket,
     selectedTicketId,
+    setAutoRunTicketWorkflow,
     ticketCommentDraft,
     ticketDetail,
     ticketDetailError,

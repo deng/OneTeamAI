@@ -25,6 +25,66 @@ export interface HealthResponse {
      * @memberof HealthResponse
      */
     status?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof HealthResponse
+     */
+    environment?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof HealthResponse
+     */
+    databaseReachable?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof HealthResponse
+     */
+    chatbotConfigured?: boolean;
+    /**
+     * 
+     * @type {number}
+     * @memberof HealthResponse
+     */
+    activeSessionCount?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof HealthResponse
+     */
+    expiredSessionCount?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof HealthResponse
+     */
+    teamCount?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof HealthResponse
+     */
+    pendingInvitationCount?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof HealthResponse
+     */
+    expiredInvitationCount?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof HealthResponse
+     */
+    auditLogCount?: number;
+    /**
+     * 
+     * @type {Date}
+     * @memberof HealthResponse
+     */
+    checkedAt?: Date;
 }
 
 /**
@@ -45,6 +105,16 @@ export function HealthResponseFromJSONTyped(json: any, ignoreDiscriminator: bool
     return {
         
         'status': json['status'] == null ? undefined : json['status'],
+        'environment': json['environment'] == null ? undefined : json['environment'],
+        'databaseReachable': json['databaseReachable'] == null ? undefined : json['databaseReachable'],
+        'chatbotConfigured': json['chatbotConfigured'] == null ? undefined : json['chatbotConfigured'],
+        'activeSessionCount': json['activeSessionCount'] == null ? undefined : json['activeSessionCount'],
+        'expiredSessionCount': json['expiredSessionCount'] == null ? undefined : json['expiredSessionCount'],
+        'teamCount': json['teamCount'] == null ? undefined : json['teamCount'],
+        'pendingInvitationCount': json['pendingInvitationCount'] == null ? undefined : json['pendingInvitationCount'],
+        'expiredInvitationCount': json['expiredInvitationCount'] == null ? undefined : json['expiredInvitationCount'],
+        'auditLogCount': json['auditLogCount'] == null ? undefined : json['auditLogCount'],
+        'checkedAt': json['checkedAt'] == null ? undefined : (new Date(json['checkedAt'])),
     };
 }
 
@@ -60,6 +130,16 @@ export function HealthResponseToJSONTyped(value?: HealthResponse | null, ignoreD
     return {
         
         'status': value['status'],
+        'environment': value['environment'],
+        'databaseReachable': value['databaseReachable'],
+        'chatbotConfigured': value['chatbotConfigured'],
+        'activeSessionCount': value['activeSessionCount'],
+        'expiredSessionCount': value['expiredSessionCount'],
+        'teamCount': value['teamCount'],
+        'pendingInvitationCount': value['pendingInvitationCount'],
+        'expiredInvitationCount': value['expiredInvitationCount'],
+        'auditLogCount': value['auditLogCount'],
+        'checkedAt': value['checkedAt'] == null ? value['checkedAt'] : value['checkedAt'].toISOString(),
     };
 }
 

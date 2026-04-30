@@ -13,6 +13,14 @@
  */
 
 import { mapValues } from '../runtime';
+import type { AgentWorkflowTriggerMode } from './AgentWorkflowTriggerMode';
+import {
+    AgentWorkflowTriggerModeFromJSON,
+    AgentWorkflowTriggerModeFromJSONTyped,
+    AgentWorkflowTriggerModeToJSON,
+    AgentWorkflowTriggerModeToJSONTyped,
+} from './AgentWorkflowTriggerMode';
+
 /**
  * 
  * @export
@@ -31,7 +39,15 @@ export interface RunTicketWorkflowRequest {
      * @memberof RunTicketWorkflowRequest
      */
     startedByMemberId?: string | null;
+    /**
+     * 
+     * @type {AgentWorkflowTriggerMode}
+     * @memberof RunTicketWorkflowRequest
+     */
+    triggerMode?: AgentWorkflowTriggerMode;
 }
+
+
 
 /**
  * Check if a given object implements the RunTicketWorkflowRequest interface.
@@ -52,6 +68,7 @@ export function RunTicketWorkflowRequestFromJSONTyped(json: any, ignoreDiscrimin
         
         'goal': json['goal'] == null ? undefined : json['goal'],
         'startedByMemberId': json['startedByMemberId'] == null ? undefined : json['startedByMemberId'],
+        'triggerMode': json['triggerMode'] == null ? undefined : AgentWorkflowTriggerModeFromJSON(json['triggerMode']),
     };
 }
 
@@ -68,6 +85,7 @@ export function RunTicketWorkflowRequestToJSONTyped(value?: RunTicketWorkflowReq
         
         'goal': value['goal'],
         'startedByMemberId': value['startedByMemberId'],
+        'triggerMode': AgentWorkflowTriggerModeToJSON(value['triggerMode']),
     };
 }
 

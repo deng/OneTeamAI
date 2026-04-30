@@ -3,6 +3,7 @@ import { ChatPanel } from './components/ChatPanel';
 import { AdminWorkspaceSection } from './components/AdminWorkspaceSection';
 import { AuthSection } from './components/AuthSection';
 import { BusinessWorkspaceSection } from './components/BusinessWorkspaceSection';
+import { CollapsibleSection } from './components/CollapsibleSection';
 import { TeamSection } from './components/TeamSection';
 import { useWorkspaceAuth } from './useWorkspaceAuth';
 import { useWorkspaceChat } from './useWorkspaceChat';
@@ -54,6 +55,8 @@ export function AppWorkspace() {
     conciergeUpdateForm,
     createConciergeForm,
     createProjectForm,
+    isResourcesLoading,
+    resourcesError,
     refreshWorkspaceData,
     projectUpdateForm,
     projects,
@@ -103,6 +106,9 @@ export function AppWorkspace() {
     createCustomerForm,
     customerUpdateForm,
     customers,
+    customersError,
+    isCustomersLoading,
+    refreshCustomers,
     selectedCustomer,
     selectedCustomerId,
     setCreateCustomerForm,
@@ -118,18 +124,24 @@ export function AppWorkspace() {
     setFeedback,
   });
   const {
+    autoRunConversationWorkflow,
     conversations,
     conversationDetail,
     conversationDetailError,
+    conversationsError,
     createConversationForm,
     filteredConversations,
     isConversationDetailLoading,
+    isConversationsLoading,
     selectedConversation,
     selectedConversationId,
+    setAutoRunConversationWorkflow,
     setCreateConversationForm,
     setSelectedConversationId,
     handleCreateConversation,
+    refreshConversations,
   } = useWorkspaceConversations({
+    currentTeamId,
     selectedConciergeApp,
     selectedCustomer,
     selectedCustomerId,
@@ -138,13 +150,18 @@ export function AppWorkspace() {
     setFeedback,
   });
   const {
+    autoRunTicketWorkflow,
     createTicketForm,
     filteredTickets,
     isTicketDetailLoading,
+    isTicketsLoading,
+    ticketsError,
     relatedTickets,
+    refreshTickets,
     tickets,
     selectedTicket,
     selectedTicketId,
+    setAutoRunTicketWorkflow,
     ticketCommentDraft,
     ticketDetail,
     ticketDetailError,
@@ -167,6 +184,8 @@ export function AppWorkspace() {
   });
   const {
     aiMemberForm,
+    aiTemplateEditorForm,
+    aiTemplateLibrary,
     aiTemplateOptions,
     humanMemberForm,
     invitationForm,
@@ -177,20 +196,28 @@ export function AppWorkspace() {
     teamSettingsForm,
     userSessions,
     setAiMemberForm,
+    setAiTemplateEditorForm,
     setHumanMemberForm,
     setInvitationForm,
     setTeamSettingsForm,
     handleApplyAiTemplate,
     handleAcceptInvitation,
     handleCreateAiMember,
+    handleCreateAiTemplateTemplate,
     handleCreateHumanMember,
     handleCreateInvitation,
+    handleDuplicateAiTemplate,
+    handleEditAiTemplate,
     handleLogoutAll,
     handleRemoveMember,
     handleRevokeInvitation,
     handleRevokeSession,
     handleSaveTeamSettings,
+    handleStartNewAiTemplate,
+    handleToggleAiTemplate,
     handleUpdateMemberRole,
+    handleUpdateAiTemplateTemplate,
+    selectedAiTemplateId,
   } = useWorkspaceTeamSettings({
     currentTeam,
     currentTeamId,
@@ -207,6 +234,7 @@ export function AppWorkspace() {
   const {
     integrationConnections,
     integrationFiles,
+    integrationFolderPath,
     integrationForm,
     integrationPreviewCount,
     integrationPreviewCustomers,
@@ -216,16 +244,103 @@ export function AppWorkspace() {
     selectedIntegration,
     selectedIntegrationHealth,
     selectedIntegrationId,
+    setIntegrationFolderPath,
     setIntegrationForm,
     handleCreateIntegration,
+    handleImportPreviewCustomer,
+    handleImportPreviewProject,
+    handleImportPreviewTicket,
+    handleRefreshIntegrationPreview,
     handleSelectIntegrationId,
     handleValidateIntegration,
   } = useWorkspaceIntegrations({
     currentTeamId,
+    refreshWorkspaceData,
+    refreshCustomers,
+    refreshTickets,
+    selectedProjectId,
+    selectedCustomerId,
     token,
     runAction,
     setFeedback,
   });
+  const importedCustomerExternalIds = useMemo(
+    () =>
+      customers
+        .filter(
+          customer =>
+            customer.externalSystemType === selectedIntegration?.externalSystemType
+            && Boolean(customer.externalId),
+        )
+        .map(customer => customer.externalId as string),
+    [customers, selectedIntegration?.externalSystemType],
+  );
+  const importedProjectExternalIds = useMemo(
+    () =>
+      projects
+        .filter(
+          project =>
+            project.externalSystemType === selectedIntegration?.externalSystemType
+            && Boolean(project.externalId),
+        )
+        .map(project => project.externalId as string),
+    [projects, selectedIntegration?.externalSystemType],
+  );
+  const integrationAuditLogs = useMemo(
+    () => {
+      const logs = teamAuditLogs.filter(log => log.actionType.startsWith('integration.'));
+      if (!selectedIntegration) {
+        return logs;
+      }
+
+      return logs.filter(log => {
+        if (log.entityId === selectedIntegration.id) {
+          return true;
+        }
+
+        return log.summary.includes(selectedIntegration.name ?? '');
+      });
+    },
+    [selectedIntegration, teamAuditLogs],
+  );
+  const mappedCustomers = useMemo(
+    () =>
+      customers.filter(
+        customer =>
+          customer.externalSystemType === selectedIntegration?.externalSystemType
+          && Boolean(customer.externalId),
+      ),
+    [customers, selectedIntegration?.externalSystemType],
+  );
+  const mappedProjects = useMemo(
+    () =>
+      projects.filter(
+        project =>
+          project.externalSystemType === selectedIntegration?.externalSystemType
+          && Boolean(project.externalId),
+      ),
+    [projects, selectedIntegration?.externalSystemType],
+  );
+  const importedTicketExternalIds = useMemo(
+    () =>
+      tickets
+        .filter(
+          ticket =>
+            ticket.externalSystemType === selectedIntegration?.externalSystemType
+            && Boolean(ticket.externalId),
+        )
+        .map(ticket => ticket.externalId as string),
+    [tickets, selectedIntegration?.externalSystemType],
+  );
+  const mappedTickets = useMemo(
+    () =>
+      tickets.filter(
+        ticket =>
+          ticket.externalSystemType === selectedIntegration?.externalSystemType
+          && Boolean(ticket.externalId),
+      ),
+    [tickets, selectedIntegration?.externalSystemType],
+  );
   const {
     currentScopeWorkflowTemplates: projectWorkflowTemplates,
     selectedWorkflow: projectSelectedWorkflow,
@@ -436,7 +551,8 @@ export function AppWorkspace() {
 
       <div className="workspace">
         <aside className="panel panel-side">
-          <AuthSection
+            <CollapsibleSection title="账号" storageKey="section-auth" defaultExpanded={!currentUser}>
+              <AuthSection
             busyAction={busyAction}
             currentUser={currentUser}
             feedback={feedback}
@@ -455,7 +571,9 @@ export function AppWorkspace() {
             onLoginFormChange={setLoginForm}
             onRegisterFormChange={setRegisterForm}
           />
+            </CollapsibleSection>
 
+            <CollapsibleSection title="团队" storageKey="section-team" defaultExpanded={!currentTeamId}>
           <TeamSection
             busyAction={busyAction}
             currentTeam={currentTeam}
@@ -471,25 +589,39 @@ export function AppWorkspace() {
             onTeamDescriptionChange={setTeamDescription}
             onTeamNameChange={setTeamName}
           />
+            </CollapsibleSection>
 
           {currentUser && currentTeamId ? (
-            <AdminWorkspaceSection
+            <CollapsibleSection title="管理" storageKey="section-admin">
+              <AdminWorkspaceSection
               busyAction={busyAction}
               canManageIntegrations={Boolean(currentTeamId)}
               conciergeCountByMemberId={conciergeCountByMemberId}
               createdTeam={currentTeam}
               currentUser={currentUser}
               aiMemberForm={aiMemberForm}
+              aiTemplateEditorForm={aiTemplateEditorForm}
+              aiTemplateLibrary={aiTemplateLibrary}
               aiTemplateOptions={aiTemplateOptions}
               humanMemberForm={humanMemberForm}
               integrationConnections={integrationConnections}
               integrationFiles={integrationFiles}
+              integrationFolderPath={integrationFolderPath}
               integrationForm={integrationForm}
               integrationPreviewCount={integrationPreviewCount}
               integrationPreviewCustomers={integrationPreviewCustomers}
               integrationPreviewProjects={integrationPreviewProjects}
               integrationPreviewTasks={integrationPreviewTasks}
               integrationPreviewTickets={integrationPreviewTickets}
+              integrationAuditLogs={integrationAuditLogs}
+              importedCustomerExternalIds={importedCustomerExternalIds}
+              importedProjectExternalIds={importedProjectExternalIds}
+              importedTicketExternalIds={importedTicketExternalIds}
+              mappedCustomers={mappedCustomers}
+              mappedProjects={mappedProjects}
+              mappedTickets={mappedTickets}
+              currentProjectId={selectedProjectId}
+              currentProject={selectedProject}
               myAuditLogs={myAuditLogs}
               myInvitations={myInvitations}
               myTeamsCount={teams.length}
@@ -498,9 +630,13 @@ export function AppWorkspace() {
                 void handleAcceptInvitation(invitation);
               }}
               onAiMemberFormChange={setAiMemberForm}
+              onAiTemplateEditorFormChange={setAiTemplateEditorForm}
               onApplyAiTemplate={handleApplyAiTemplate}
               onCreateAiMember={() => {
                 void handleCreateAiMember();
+              }}
+              onCreateAiTemplateTemplate={() => {
+                void handleCreateAiTemplateTemplate();
               }}
               onCreateHumanMember={() => {
                 void handleCreateHumanMember();
@@ -508,11 +644,44 @@ export function AppWorkspace() {
               onCreateInvitation={() => {
                 void handleCreateInvitation();
               }}
+              onDuplicateAiTemplate={handleDuplicateAiTemplate}
+              onEditAiTemplate={handleEditAiTemplate}
               onCreateIntegration={() => {
                 void handleCreateIntegration();
               }}
               onHumanMemberFormChange={setHumanMemberForm}
+              onImportPreviewCustomer={(externalRecordId, forceUpdate) => {
+                void handleImportPreviewCustomer(externalRecordId, forceUpdate);
+              }}
+              onImportPreviewProject={(externalRecordId, forceUpdate) => {
+                void handleImportPreviewProject(externalRecordId, forceUpdate);
+              }}
+              onImportPreviewTicket={(externalRecordId, forceUpdate) => {
+                void handleImportPreviewTicket(externalRecordId, forceUpdate);
+              }}
+              onIntegrationFolderPathChange={setIntegrationFolderPath}
               onIntegrationFormChange={setIntegrationForm}
+              onNavigateToCustomer={navigateToCustomer}
+              onNavigateToProject={navigateToProject}
+              onNavigateToTicket={navigateToTicket}
+              onRefreshIntegrationPreview={() => {
+                void handleRefreshIntegrationPreview();
+              }}
+              onRetryLatestIntegrationIssue={() => {
+                if (!selectedIntegration) {
+                  return;
+                }
+
+                if (
+                  selectedIntegrationHealth
+                  && (!selectedIntegrationHealth.isAuthenticated || !selectedIntegrationHealth.isReachable)
+                ) {
+                  void handleValidateIntegration();
+                  return;
+                }
+
+                void handleRefreshIntegrationPreview();
+              }}
               onInvitationFormChange={setInvitationForm}
               onLogoutAll={() => {
                 void handleLogoutAll();
@@ -532,14 +701,22 @@ export function AppWorkspace() {
               onSelectIntegrationId={integrationId => {
                 void handleSelectIntegrationId(integrationId);
               }}
+              onStartNewAiTemplate={handleStartNewAiTemplate}
               onTeamSettingsFormChange={setTeamSettingsForm}
+              onToggleAiTemplate={template => {
+                void handleToggleAiTemplate(template);
+              }}
               onUpdateMemberRole={(member, role) => {
                 void handleUpdateMemberRole(member, role);
+              }}
+              onUpdateAiTemplateTemplate={() => {
+                void handleUpdateAiTemplateTemplate();
               }}
               onValidateIntegration={() => {
                 void handleValidateIntegration();
               }}
               projectsLeadCountByMemberId={projectsLeadCountByMemberId}
+              selectedAiTemplateId={selectedAiTemplateId}
               selectedIntegration={selectedIntegration}
               selectedIntegrationHealth={selectedIntegrationHealth}
               selectedIntegrationId={selectedIntegrationId}
@@ -549,10 +726,14 @@ export function AppWorkspace() {
               teamSettingsForm={teamSettingsForm}
               userSessions={userSessions}
             />
+            </CollapsibleSection>
           ) : null}
 
           {currentUser && currentTeamId ? (
-            <BusinessWorkspaceSection
+            <CollapsibleSection title="业务" storageKey="section-business">
+              <BusinessWorkspaceSection
+              autoRunConversationWorkflow={autoRunConversationWorkflow}
+              autoRunTicketWorkflow={autoRunTicketWorkflow}
               busyAction={busyAction}
               canManage={Boolean(currentTeamId)}
               conciergeApps={conciergeApps}
@@ -568,12 +749,24 @@ export function AppWorkspace() {
               allTickets={tickets}
               customerUpdateForm={customerUpdateForm}
               customers={customers}
+              customersLoading={isCustomersLoading}
+              customersError={customersError}
+              onRetryCustomers={() => currentTeamId && refreshCustomers(currentTeamId)}
               filteredConversations={filteredConversations}
+              conversationsLoading={isConversationsLoading}
+              conversationsError={conversationsError}
+              onRetryConversations={() => refreshConversations()}
               filteredTickets={filteredTickets}
+              ticketsLoading={isTicketsLoading}
+              ticketsError={ticketsError}
+              onRetryTickets={() => refreshTickets()}
               isConversationDetailLoading={isConversationDetailLoading}
               isTicketDetailLoading={isTicketDetailLoading}
               projectUpdateForm={projectUpdateForm}
               projects={projects}
+              projectsLoading={isResourcesLoading}
+              projectsError={resourcesError}
+              onRetryProjects={() => currentTeamId && refreshWorkspaceData(currentTeamId)}
               relatedTickets={relatedTickets}
               selectedConciergeApp={selectedConciergeApp}
               selectedConciergeAppId={selectedConciergeAppId}
@@ -611,6 +804,7 @@ export function AppWorkspace() {
               onCreateConversation={() => {
                 void handleCreateConversation();
               }}
+              onAutoRunConversationWorkflowChange={setAutoRunConversationWorkflow}
               onCreateConversationFormChange={setCreateConversationForm}
               onCreateCustomer={() => {
                 void handleCreateCustomer();
@@ -623,6 +817,7 @@ export function AppWorkspace() {
               onCreateTicket={() => {
                 void handleCreateTicket();
               }}
+              onAutoRunTicketWorkflowChange={setAutoRunTicketWorkflow}
               onCreateTicketFormChange={setCreateTicketForm}
               onCustomerUpdateFormChange={setCustomerUpdateForm}
               onProjectUpdateFormChange={setProjectUpdateForm}
@@ -659,6 +854,7 @@ export function AppWorkspace() {
               onProjectWorkflowFormChange={setProjectWorkflowForm}
               onCustomerWorkflowFormChange={setCustomerWorkflowForm}
             />
+            </CollapsibleSection>
           ) : null}
 
           <div className="panel-title panel-title-gap">快捷问题</div>

@@ -11,6 +11,10 @@ public sealed record PublicConciergeAppResponse(
     string? FaqScope,
     string? BusinessHours,
     string? ChannelLabel,
+    string? IntakeGuidance,
+    string? SuggestedPrompts,
+    bool RequireEmail,
+    bool RequirePhoneNumber,
     ConciergeAppStatus Status,
     string? TeamBrandName,
     string? ProjectName);

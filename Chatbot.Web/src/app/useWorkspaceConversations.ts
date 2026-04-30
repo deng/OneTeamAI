@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  AgentWorkflowTriggerMode,
   TicketPriority,
   type ConciergeAppResponse,
   type ConversationDetailResponse,
@@ -7,7 +8,7 @@ import {
   type CreateConversationRequest,
   type CustomerResponse,
 } from '../generated/api';
-import { createWorkspaceApis, getErrorMessage } from './workspaceApi';
+import { createWorkspaceApis, fetchJson, getErrorMessage } from './workspaceApi';
 
 type RunAction = (name: string, action: () => Promise<void>) => Promise<void>;
 
@@ -23,6 +24,7 @@ function emptyCreateConversationForm(): CreateConversationRequest {
 }
 
 export function useWorkspaceConversations({
+  currentTeamId,
   selectedConciergeApp,
   selectedCustomer,
   selectedCustomerId,
@@ -30,6 +32,7 @@ export function useWorkspaceConversations({
   runAction,
   setFeedback,
 }: {
+  currentTeamId: string;
   selectedConciergeApp: ConciergeAppResponse | null | undefined;
   selectedCustomer: CustomerResponse | null;
   selectedCustomerId: string;
@@ -42,8 +45,11 @@ export function useWorkspaceConversations({
   const [conversationDetail, setConversationDetail] = useState<ConversationDetailResponse | null>(null);
   const [conversationDetailError, setConversationDetailError] = useState<string | null>(null);
   const [isConversationDetailLoading, setIsConversationDetailLoading] = useState(false);
+  const [isConversationsLoading, setIsConversationsLoading] = useState(false);
+  const [conversationsError, setConversationsError] = useState<string | null>(null);
   const [createConversationForm, setCreateConversationForm] =
     useState<CreateConversationRequest>(emptyCreateConversationForm);
+  const [autoRunConversationWorkflow, setAutoRunConversationWorkflow] = useState(false);
 
   const { conversationsApi } = useMemo(() => createWorkspaceApis(token), [token]);
   const selectedConversation =
@@ -82,30 +88,39 @@ export function useWorkspaceConversations({
 
     let cancelled = false;
     const conciergeAppId = selectedConciergeApp.id;
+    setIsConversationsLoading(true);
+    setConversationsError(null);
 
     void (async () => {
-      const nextConversations = await conversationsApi.listConversations({
-        conciergeAppId,
-      });
-
-      if (cancelled) {
-        return;
-      }
-
-      setConversations(nextConversations);
-      setSelectedConversationId(current =>
-        nextConversations.some(conversation => conversation.id === current)
-          ? current
-          : (nextConversations[0]?.id ?? ''),
-      );
-    })().catch(error => {
-      if (!cancelled) {
-        setFeedback({
-          kind: 'error',
-          text: getErrorMessage(error),
+      try {
+        const nextConversations = await conversationsApi.listConversations({
+          conciergeAppId,
         });
+
+        if (cancelled) {
+          return;
+        }
+
+        setConversations(nextConversations);
+        setSelectedConversationId(current =>
+          nextConversations.some(conversation => conversation.id === current)
+            ? current
+            : (nextConversations[0]?.id ?? ''),
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setConversationsError(getErrorMessage(error));
+          setFeedback({
+            kind: 'error',
+            text: getErrorMessage(error),
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setIsConversationsLoading(false);
+        }
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
@@ -179,6 +194,20 @@ export function useWorkspaceConversations({
         createConversationRequest: createConversationForm,
       });
 
+      if (autoRunConversationWorkflow && currentTeamId && created.id) {
+        await fetchJson(`/api/teams/${currentTeamId}/conversations/${created.id}/workflows`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token ?? ''}`,
+          },
+          body: JSON.stringify({
+            goal: `围绕新会话“${createConversationForm.customerDisplayName ?? '客户会话'}”自动完成接待分析与后续建议。`,
+            triggerMode: AgentWorkflowTriggerMode.NUMBER_1,
+          }),
+        });
+      }
+
       await refreshConversations();
       setSelectedConversationId(created.id ?? '');
       setCreateConversationForm(current => ({
@@ -189,7 +218,7 @@ export function useWorkspaceConversations({
       }));
       setFeedback({
         kind: 'success',
-        text: '已创建会话。',
+        text: autoRunConversationWorkflow ? '已创建会话并自动启动协作。' : '已创建会话。',
       });
     });
   }
@@ -201,10 +230,15 @@ export function useWorkspaceConversations({
     createConversationForm,
     filteredConversations,
     isConversationDetailLoading,
+    isConversationsLoading,
+    conversationsError,
+    autoRunConversationWorkflow,
     selectedConversation,
     selectedConversationId,
+    setAutoRunConversationWorkflow,
     setCreateConversationForm,
     setSelectedConversationId,
     handleCreateConversation,
+    refreshConversations,
   };
 }

@@ -8,6 +8,7 @@ Name | Type
 ------------ | -------------
 `goal` | string
 `startedByMemberId` | string
+`triggerMode` | [AgentWorkflowTriggerMode](AgentWorkflowTriggerMode.md)
 
 ## Example
 
@@ -18,6 +19,7 @@ import type { RunTicketWorkflowRequest } from ''
 const example = {
   "goal": null,
   "startedByMemberId": null,
+  "triggerMode": null,
 } satisfies RunTicketWorkflowRequest
 
 console.log(example)

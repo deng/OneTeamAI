@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from './AuditApi';
 export * from './AuthApi';
 export * from './ChatApi';
 export * from './ConciergeAppsApi';
@@ -9,6 +10,7 @@ export * from './IntegrationsApi';
 export * from './InvitationsApi';
 export * from './MembersApi';
 export * from './ProjectsApi';
+export * from './PublicConciergeApi';
 export * from './SystemApi';
 export * from './TeamsApi';
 export * from './TicketsApi';

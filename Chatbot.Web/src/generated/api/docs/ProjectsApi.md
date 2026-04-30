@@ -6,6 +6,7 @@ All URIs are relative to *http://localhost*
 |------------- | ------------- | -------------|
 | [**createProject**](ProjectsApi.md#createprojectoperation) | **POST** /api/teams/{teamId}/projects |  |
 | [**listProjects**](ProjectsApi.md#listprojects) | **GET** /api/teams/{teamId}/projects |  |
+| [**updateProject**](ProjectsApi.md#updateprojectoperation) | **PATCH** /api/teams/{teamId}/projects/{projectId} |  |
 
 
 
@@ -150,6 +151,85 @@ example().catch(console.error);
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 | **200** | OK |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Not Found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## updateProject
+
+> ProjectResponse updateProject(teamId, projectId, updateProjectRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  ProjectsApi,
+} from '';
+import type { UpdateProjectOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: Bearer
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new ProjectsApi(config);
+
+  const body = {
+    // string
+    teamId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // string
+    projectId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // UpdateProjectRequest
+    updateProjectRequest: ...,
+  } satisfies UpdateProjectOperationRequest;
+
+  try {
+    const data = await api.updateProject(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **teamId** | `string` |  | [Defaults to `undefined`] |
+| **projectId** | `string` |  | [Defaults to `undefined`] |
+| **updateProjectRequest** | [UpdateProjectRequest](UpdateProjectRequest.md) |  | |
+
+### Return type
+
+[**ProjectResponse**](ProjectResponse.md)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+| **400** | Bad Request |  -  |
 | **401** | Unauthorized |  -  |
 | **403** | Forbidden |  -  |
 | **404** | Not Found |  -  |

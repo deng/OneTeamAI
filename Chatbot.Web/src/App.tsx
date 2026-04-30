@@ -1,14 +1,23 @@
-import { AppWorkspace } from './app/AppWorkspace';
+import { Navigate, Route, Routes, useParams } from 'react-router-dom';
+import { LoginPage } from './app/components/LoginPage';
 import { PublicConciergePage } from './app/components/PublicConciergePage';
+import { WorkspacePage } from './app/components/WorkspacePage';
+
+function ConciergeRoute() {
+  const { appId } = useParams<{ appId: string }>();
+  if (!appId) {
+    return <Navigate to="/workspace" replace />;
+  }
+  return <PublicConciergePage appId={appId} />;
+}
 
 export default function App() {
-  const params = new URLSearchParams(window.location.search);
-  const view = params.get('view');
-  const appId = params.get('appId') ?? '';
-
-  if (view === 'concierge' && appId) {
-    return <PublicConciergePage appId={appId} />;
-  }
-
-  return <AppWorkspace />;
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/workspace" element={<WorkspacePage />} />
+      <Route path="/concierge/:appId" element={<ConciergeRoute />} />
+      <Route path="*" element={<Navigate to="/workspace" replace />} />
+    </Routes>
+  );
 }

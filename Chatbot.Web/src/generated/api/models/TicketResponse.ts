@@ -128,6 +128,18 @@ export interface TicketResponse {
     dueAt?: Date | null;
     /**
      * 
+     * @type {string}
+     * @memberof TicketResponse
+     */
+    resolutionSummary?: string | null;
+    /**
+     * 
+     * @type {Date}
+     * @memberof TicketResponse
+     */
+    resolvedAt?: Date | null;
+    /**
+     * 
      * @type {Date}
      * @memberof TicketResponse
      */
@@ -202,6 +214,8 @@ export function TicketResponseFromJSONTyped(json: any, ignoreDiscriminator: bool
         'status': json['status'] == null ? undefined : TicketStatusFromJSON(json['status']),
         'priority': json['priority'] == null ? undefined : TicketPriorityFromJSON(json['priority']),
         'dueAt': json['dueAt'] == null ? undefined : (new Date(json['dueAt'])),
+        'resolutionSummary': json['resolutionSummary'] == null ? undefined : json['resolutionSummary'],
+        'resolvedAt': json['resolvedAt'] == null ? undefined : (new Date(json['resolvedAt'])),
         'lastActivityAt': json['lastActivityAt'] == null ? undefined : (new Date(json['lastActivityAt'])),
         'assignedMemberId': json['assignedMemberId'] == null ? undefined : json['assignedMemberId'],
         'assignedMemberName': json['assignedMemberName'] == null ? undefined : json['assignedMemberName'],
@@ -236,6 +250,8 @@ export function TicketResponseToJSONTyped(value?: TicketResponse | null, ignoreD
         'status': TicketStatusToJSON(value['status']),
         'priority': TicketPriorityToJSON(value['priority']),
         'dueAt': value['dueAt'] == null ? value['dueAt'] : value['dueAt'].toISOString(),
+        'resolutionSummary': value['resolutionSummary'],
+        'resolvedAt': value['resolvedAt'] == null ? value['resolvedAt'] : value['resolvedAt'].toISOString(),
         'lastActivityAt': value['lastActivityAt'] == null ? value['lastActivityAt'] : value['lastActivityAt'].toISOString(),
         'assignedMemberId': value['assignedMemberId'],
         'assignedMemberName': value['assignedMemberName'],
@@ -245,3 +261,4 @@ export function TicketResponseToJSONTyped(value?: TicketResponse | null, ignoreD
         'createdAt': value['createdAt'] == null ? value['createdAt'] : value['createdAt'].toISOString(),
     };
 }
+

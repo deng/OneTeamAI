@@ -10,12 +10,16 @@ import {
 import { ConversationPanel } from './ConversationPanel';
 
 type ConversationSectionProps = {
+  autoRunConversationWorkflow: boolean;
   busyAction: string | null;
   canManageConversations: boolean;
   conversationDetail: ConversationDetailResponse | null;
   conversationDetailError: string | null;
   createConversationForm: CreateConversationRequest;
   filteredConversations: ConversationSummaryResponse[];
+  conversationsLoading?: boolean;
+  conversationsError?: string | null;
+  onRetryConversations?: () => void;
   isConversationDetailLoading: boolean;
   relatedTickets: TicketResponse[];
   selectedConversation: ConversationSummaryResponse | null;
@@ -23,6 +27,7 @@ type ConversationSectionProps = {
   selectedCustomer: CustomerResponse | null;
   onCreateConversation: () => void;
   onCreateConversationFormChange: Dispatch<SetStateAction<CreateConversationRequest>>;
+  onAutoRunConversationWorkflowChange: (value: boolean) => void;
   onRunConversationWorkflow: () => void;
   onSelectConversationId: (conversationId: string) => void;
   onSelectRelatedConciergeAppId: (conciergeAppId: string) => void;
@@ -31,12 +36,16 @@ type ConversationSectionProps = {
 };
 
 export function ConversationSection({
+  autoRunConversationWorkflow,
   busyAction,
   canManageConversations,
   conversationDetail,
   conversationDetailError,
   createConversationForm,
   filteredConversations,
+  conversationsLoading = false,
+  conversationsError = null,
+  onRetryConversations,
   isConversationDetailLoading,
   relatedTickets,
   selectedConversation,
@@ -44,6 +53,7 @@ export function ConversationSection({
   selectedCustomer,
   onCreateConversation,
   onCreateConversationFormChange,
+  onAutoRunConversationWorkflowChange,
   onRunConversationWorkflow,
   onSelectConversationId,
   onSelectRelatedConciergeAppId,
@@ -119,6 +129,14 @@ export function ConversationSection({
             <option value={TicketPriority.NUMBER_3}>紧急</option>
           </select>
         </label>
+        <label className="checkbox-field">
+          <input
+            checked={autoRunConversationWorkflow}
+            type="checkbox"
+            onChange={event => onAutoRunConversationWorkflowChange(event.currentTarget.checked)}
+          />
+          创建会话后自动启动 AI 协作
+        </label>
         <button
           className="secondary-button"
           disabled={busyAction !== null || !selectedCustomer || !createConversationForm.initialMessage?.trim()}
@@ -131,6 +149,9 @@ export function ConversationSection({
 
       <ConversationPanel
         filteredConversations={filteredConversations}
+        conversationsLoading={conversationsLoading}
+        conversationsError={conversationsError}
+        onRetryConversations={onRetryConversations}
         selectedConversationId={selectedConversationId}
         onSelectConversationId={onSelectConversationId}
         onSelectRelatedConciergeAppId={onSelectRelatedConciergeAppId}

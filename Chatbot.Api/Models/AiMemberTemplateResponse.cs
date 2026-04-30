@@ -1,6 +1,7 @@
 namespace Chatbot.Api.Models;
 
 public sealed record AiMemberTemplateResponse(
+    Guid Id,
     string Key,
     string Label,
     string DisplayName,
@@ -12,4 +13,8 @@ public sealed record AiMemberTemplateResponse(
     string? AllowedTools,
     string? ExecutableActions,
     string? KnowledgeScope,
-    bool IsAutonomous);
+    bool IsAutonomous,
+    Guid? TeamId,
+    bool IsBuiltIn,
+    bool IsEnabled,
+    int SortOrder);

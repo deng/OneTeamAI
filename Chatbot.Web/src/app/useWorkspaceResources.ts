@@ -32,8 +32,12 @@ function emptyConciergeUpdateForm(): UpdateConciergeAppRequest {
     serviceScope: '',
     welcomeMessage: '',
     faqScope: '',
+    intakeGuidance: '',
+    suggestedPrompts: '',
     businessHours: '',
     channelLabel: '',
+    requireEmail: false,
+    requirePhoneNumber: false,
     primaryAiMemberId: '',
     ticketCreationPolicy: '',
     humanHandoffPolicy: '',
@@ -57,6 +61,8 @@ export function useWorkspaceResources({
   const [conciergeApps, setConciergeApps] = useState<ConciergeAppResponse[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [selectedConciergeAppId, setSelectedConciergeAppId] = useState('');
+  const [isResourcesLoading, setIsResourcesLoading] = useState(false);
+  const [resourcesError, setResourcesError] = useState<string | null>(null);
   const [createProjectForm, setCreateProjectForm] = useState<CreateProjectRequest>({
     name: '',
     description: '',
@@ -71,8 +77,12 @@ export function useWorkspaceResources({
     serviceScope: '',
     welcomeMessage: '',
     faqScope: '',
+    intakeGuidance: '',
+    suggestedPrompts: '',
     businessHours: '',
     channelLabel: '',
+    requireEmail: false,
+    requirePhoneNumber: false,
     primaryAiMemberId: '',
     ticketCreationPolicy: '',
     humanHandoffPolicy: '',
@@ -100,34 +110,44 @@ export function useWorkspaceResources({
 
     let cancelled = false;
 
+    setIsResourcesLoading(true);
+    setResourcesError(null);
+
     void (async () => {
-      const [members, nextProjects, nextConciergeApps] = await Promise.all([
-        membersApi.listTeamMembers({ teamId: currentTeamId }),
-        projectsApi.listProjects({ teamId: currentTeamId }),
-        conciergeAppsApi.listConciergeApps({ teamId: currentTeamId }),
-      ]);
+      try {
+        const [members, nextProjects, nextConciergeApps] = await Promise.all([
+          membersApi.listTeamMembers({ teamId: currentTeamId }),
+          projectsApi.listProjects({ teamId: currentTeamId }),
+          conciergeAppsApi.listConciergeApps({ teamId: currentTeamId }),
+        ]);
 
-      if (cancelled) {
-        return;
-      }
+        if (cancelled) {
+          return;
+        }
 
-      setTeamMembers(members);
-      setProjects(nextProjects);
-      setConciergeApps(nextConciergeApps);
-      setSelectedProjectId(current =>
-        nextProjects.some(project => project.id === current) ? current : (nextProjects[0]?.id ?? ''),
-      );
-      setSelectedConciergeAppId(current =>
-        nextConciergeApps.some(app => app.id === current) ? current : (nextConciergeApps[0]?.id ?? ''),
-      );
-    })().catch(error => {
-      if (!cancelled) {
-        setFeedback({
-          kind: 'error',
-          text: error instanceof Error ? error.message : '工作台数据加载失败。',
-        });
+        setTeamMembers(members);
+        setProjects(nextProjects);
+        setConciergeApps(nextConciergeApps);
+        setSelectedProjectId(current =>
+          nextProjects.some(project => project.id === current) ? current : (nextProjects[0]?.id ?? ''),
+        );
+        setSelectedConciergeAppId(current =>
+          nextConciergeApps.some(app => app.id === current) ? current : (nextConciergeApps[0]?.id ?? ''),
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setResourcesError(error instanceof Error ? error.message : '工作台数据加载失败。');
+          setFeedback({
+            kind: 'error',
+            text: error instanceof Error ? error.message : '工作台数据加载失败。',
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setIsResourcesLoading(false);
+        }
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
@@ -164,8 +184,12 @@ export function useWorkspaceResources({
       serviceScope: selectedConciergeApp.serviceScope ?? '',
       welcomeMessage: selectedConciergeApp.welcomeMessage ?? '',
       faqScope: selectedConciergeApp.faqScope ?? '',
+      intakeGuidance: selectedConciergeApp.intakeGuidance ?? '',
+      suggestedPrompts: selectedConciergeApp.suggestedPrompts ?? '',
       businessHours: selectedConciergeApp.businessHours ?? '',
       channelLabel: selectedConciergeApp.channelLabel ?? '',
+      requireEmail: selectedConciergeApp.requireEmail ?? false,
+      requirePhoneNumber: selectedConciergeApp.requirePhoneNumber ?? false,
       primaryAiMemberId: selectedConciergeApp.primaryAiMemberId ?? '',
       ticketCreationPolicy: selectedConciergeApp.ticketCreationPolicy ?? '',
       humanHandoffPolicy: selectedConciergeApp.humanHandoffPolicy ?? '',
@@ -260,8 +284,13 @@ export function useWorkspaceResources({
         serviceScope: '',
         welcomeMessage: '',
         faqScope: '',
+        intakeGuidance: '',
+        suggestedPrompts: '',
         businessHours: '',
         channelLabel: '',
+        requireEmail: false,
+        requirePhoneNumber: false,
+        primaryAiMemberId: '',
         ticketCreationPolicy: '',
         humanHandoffPolicy: '',
       }));
@@ -299,6 +328,8 @@ export function useWorkspaceResources({
     conciergeUpdateForm,
     createConciergeForm,
     createProjectForm,
+    isResourcesLoading,
+    resourcesError,
     refreshWorkspaceData,
     projectUpdateForm,
     projects,

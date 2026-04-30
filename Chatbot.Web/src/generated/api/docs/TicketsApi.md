@@ -4,10 +4,91 @@ All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
+| [**addTicketComment**](TicketsApi.md#addticketcommentoperation) | **POST** /api/teams/{teamId}/tickets/{ticketId}/comments |  |
 | [**createTicket**](TicketsApi.md#createticketoperation) | **POST** /api/conversations/{conversationId}/tickets |  |
+| [**getTicket**](TicketsApi.md#getticket) | **GET** /api/teams/{teamId}/tickets/{ticketId} |  |
 | [**listTickets**](TicketsApi.md#listtickets) | **GET** /api/teams/{teamId}/tickets |  |
 | [**updateTicket**](TicketsApi.md#updateticketoperation) | **PATCH** /api/teams/{teamId}/tickets/{ticketId} |  |
 
+
+
+## addTicketComment
+
+> TicketActivityResponse addTicketComment(teamId, ticketId, addTicketCommentRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  TicketsApi,
+} from '';
+import type { AddTicketCommentOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: Bearer
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new TicketsApi(config);
+
+  const body = {
+    // string
+    teamId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // string
+    ticketId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // AddTicketCommentRequest
+    addTicketCommentRequest: ...,
+  } satisfies AddTicketCommentOperationRequest;
+
+  try {
+    const data = await api.addTicketComment(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **teamId** | `string` |  | [Defaults to `undefined`] |
+| **ticketId** | `string` |  | [Defaults to `undefined`] |
+| **addTicketCommentRequest** | [AddTicketCommentRequest](AddTicketCommentRequest.md) |  | |
+
+### Return type
+
+[**TicketActivityResponse**](TicketActivityResponse.md)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **201** | Created |  -  |
+| **400** | Bad Request |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Not Found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
 ## createTicket
@@ -79,6 +160,81 @@ example().catch(console.error);
 |-------------|-------------|------------------|
 | **201** | Created |  -  |
 | **400** | Bad Request |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Not Found |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## getTicket
+
+> TicketDetailResponse getTicket(teamId, ticketId)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  TicketsApi,
+} from '';
+import type { GetTicketRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: Bearer
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new TicketsApi(config);
+
+  const body = {
+    // string
+    teamId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // string
+    ticketId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+  } satisfies GetTicketRequest;
+
+  try {
+    const data = await api.getTicket(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **teamId** | `string` |  | [Defaults to `undefined`] |
+| **ticketId** | `string` |  | [Defaults to `undefined`] |
+
+### Return type
+
+[**TicketDetailResponse**](TicketDetailResponse.md)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+- **Content-Type**: Not defined
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 | **401** | Unauthorized |  -  |
 | **403** | Forbidden |  -  |
 | **404** | Not Found |  -  |

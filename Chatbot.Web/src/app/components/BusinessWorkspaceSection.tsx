@@ -24,6 +24,8 @@ import { CustomerOpsSection } from './CustomerOpsSection';
 import { ProjectOpsSection } from './ProjectOpsSection';
 
 type BusinessWorkspaceSectionProps = {
+  autoRunConversationWorkflow: boolean;
+  autoRunTicketWorkflow: boolean;
   busyAction: string | null;
   canManage: boolean;
   conciergeApps: ConciergeAppResponse[];
@@ -39,12 +41,24 @@ type BusinessWorkspaceSectionProps = {
   allTickets: TicketResponse[];
   customerUpdateForm: UpdateCustomerRequest;
   customers: CustomerResponse[];
+  customersLoading?: boolean;
+  customersError?: string | null;
+  onRetryCustomers?: () => void;
   filteredConversations: ConversationSummaryResponse[];
+  conversationsLoading?: boolean;
+  conversationsError?: string | null;
+  onRetryConversations?: () => void;
   filteredTickets: TicketResponse[];
+  ticketsLoading?: boolean;
+  ticketsError?: string | null;
+  onRetryTickets?: () => void;
   isConversationDetailLoading: boolean;
   isTicketDetailLoading: boolean;
   projectUpdateForm: UpdateProjectRequest;
   projects: ProjectResponse[];
+  projectsLoading?: boolean;
+  projectsError?: string | null;
+  onRetryProjects?: () => void;
   relatedTickets: TicketResponse[];
   selectedConciergeApp: ConciergeAppResponse | null | undefined;
   selectedConciergeAppId: string;
@@ -103,11 +117,15 @@ type BusinessWorkspaceSectionProps = {
   onTicketCommentDraftChange: (value: string) => void;
   onTicketDraftsChange: Dispatch<SetStateAction<Record<string, UpdateTicketRequest>>>;
   onAddTicketComment: () => void;
+  onAutoRunConversationWorkflowChange: (value: boolean) => void;
+  onAutoRunTicketWorkflowChange: (value: boolean) => void;
   onProjectWorkflowFormChange: Dispatch<SetStateAction<RunTicketWorkflowRequest>>;
   onCustomerWorkflowFormChange: Dispatch<SetStateAction<RunTicketWorkflowRequest>>;
 };
 
 export function BusinessWorkspaceSection({
+  autoRunConversationWorkflow,
+  autoRunTicketWorkflow,
   busyAction,
   canManage,
   conciergeApps,
@@ -123,12 +141,24 @@ export function BusinessWorkspaceSection({
   allTickets,
   customerUpdateForm,
   customers,
+  customersLoading = false,
+  customersError = null,
+  onRetryCustomers,
   filteredConversations,
+  conversationsLoading = false,
+  conversationsError = null,
+  onRetryConversations,
   filteredTickets,
+  ticketsLoading = false,
+  ticketsError = null,
+  onRetryTickets,
   isConversationDetailLoading,
   isTicketDetailLoading,
   projectUpdateForm,
   projects,
+  projectsLoading = false,
+  projectsError = null,
+  onRetryProjects,
   relatedTickets,
   selectedConciergeApp,
   selectedConciergeAppId,
@@ -187,6 +217,8 @@ export function BusinessWorkspaceSection({
   onTicketCommentDraftChange,
   onTicketDraftsChange,
   onAddTicketComment,
+  onAutoRunConversationWorkflowChange,
+  onAutoRunTicketWorkflowChange,
   onProjectWorkflowFormChange,
   onCustomerWorkflowFormChange,
 }: BusinessWorkspaceSectionProps) {
@@ -203,6 +235,9 @@ export function BusinessWorkspaceSection({
         customers={customers}
         projectUpdateForm={projectUpdateForm}
         projects={projects}
+        projectsLoading={projectsLoading}
+        projectsError={projectsError}
+        onRetryProjects={onRetryProjects}
         selectedConciergeApp={selectedConciergeApp}
         selectedConciergeAppId={selectedConciergeAppId}
         selectedProject={selectedProject}
@@ -234,6 +269,8 @@ export function BusinessWorkspaceSection({
       />
 
       <CustomerOpsSection
+        autoRunConversationWorkflow={autoRunConversationWorkflow}
+        autoRunTicketWorkflow={autoRunTicketWorkflow}
         busyAction={busyAction}
         canManage={canManage}
         conversationDetail={conversationDetail}
@@ -243,8 +280,17 @@ export function BusinessWorkspaceSection({
         createTicketForm={createTicketForm}
         customerUpdateForm={customerUpdateForm}
         customers={customers}
+        customersLoading={customersLoading}
+        customersError={customersError}
+        onRetryCustomers={onRetryCustomers}
         filteredConversations={filteredConversations}
+        conversationsLoading={conversationsLoading}
+        conversationsError={conversationsError}
+        onRetryConversations={onRetryConversations}
         filteredTickets={filteredTickets}
+        ticketsLoading={ticketsLoading}
+        ticketsError={ticketsError}
+        onRetryTickets={onRetryTickets}
         isConversationDetailLoading={isConversationDetailLoading}
         isTicketDetailLoading={isTicketDetailLoading}
         projects={projects}
@@ -268,6 +314,8 @@ export function BusinessWorkspaceSection({
         workflowScope={customerWorkflowScope}
         workflowScopeLabel={customerWorkflowScopeLabel}
         onAddTicketComment={onAddTicketComment}
+        onAutoRunConversationWorkflowChange={onAutoRunConversationWorkflowChange}
+        onAutoRunTicketWorkflowChange={onAutoRunTicketWorkflowChange}
         onCreateConversation={onCreateConversation}
         onCreateConversationFormChange={onCreateConversationFormChange}
         onCreateCustomer={onCreateCustomer}

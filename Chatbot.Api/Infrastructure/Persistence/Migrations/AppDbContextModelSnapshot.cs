@@ -171,11 +171,24 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("SummaryAttemptTrace")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SummaryRawResponse")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SummarySchemaVersion")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
                     b.Property<Guid>("TeamId")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid?>("TicketId")
                         .HasColumnType("TEXT");
+
+                    b.Property<int>("TriggerMode")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -237,6 +250,16 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("MemberId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("OutputAttemptTrace")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OutputRawResponse")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OutputSchemaVersion")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("OutputSummary")
                         .IsRequired()
                         .HasMaxLength(2048)
@@ -264,6 +287,92 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("agent_workflow_steps", (string)null);
+                });
+
+            modelBuilder.Entity("Chatbot.Api.Domain.Entities.AiMemberTemplate", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AllowedTools")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ExecutableActions")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsAutonomous")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsBuiltIn")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("KnowledgeScope")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Label")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PermissionBoundary")
+                        .HasMaxLength(1024)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ResponsibilitySummary")
+                        .IsRequired()
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("SystemPrompt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("TeamId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(128)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.HasIndex("TeamId", "IsEnabled", "SortOrder");
+
+                    b.ToTable("ai_member_templates", (string)null);
                 });
 
             modelBuilder.Entity("Chatbot.Api.Domain.Entities.AuditLog", b =>
@@ -350,6 +459,10 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                     b.Property<string>("HumanHandoffPolicy")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("IntakeGuidance")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
@@ -361,12 +474,22 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("RequireEmail")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("RequirePhoneNumber")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("ServiceScope")
                         .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("SuggestedPrompts")
+                        .HasMaxLength(2048)
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("TeamId")
                         .HasColumnType("TEXT");
@@ -872,6 +995,13 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ProjectId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ResolutionSummary")
+                        .HasMaxLength(4096)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ResolvedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("SourceType")
                         .HasColumnType("INTEGER");
 
@@ -1152,6 +1282,16 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                     b.Navigation("Member");
 
                     b.Navigation("WorkflowRun");
+                });
+
+            modelBuilder.Entity("Chatbot.Api.Domain.Entities.AiMemberTemplate", b =>
+                {
+                    b.HasOne("Chatbot.Api.Domain.Entities.Team", "Team")
+                        .WithMany("AiMemberTemplates")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Team");
                 });
 
             modelBuilder.Entity("Chatbot.Api.Domain.Entities.AuditLog", b =>
@@ -1502,6 +1642,8 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Chatbot.Api.Domain.Entities.Team", b =>
                 {
+                    b.Navigation("AiMemberTemplates");
+
                     b.Navigation("ConciergeApps");
 
                     b.Navigation("IntegrationConnections");

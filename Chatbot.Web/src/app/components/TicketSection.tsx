@@ -11,10 +11,14 @@ import type { TicketDetailItem } from '../types';
 import { TicketPanel } from './TicketPanel';
 
 type TicketSectionProps = {
+  autoRunTicketWorkflow: boolean;
   busyAction: string | null;
   canManageTickets: boolean;
   createTicketForm: CreateTicketRequest;
   filteredTickets: TicketResponse[];
+  ticketsLoading?: boolean;
+  ticketsError?: string | null;
+  onRetryTickets?: () => void;
   isTicketDetailLoading: boolean;
   relatedTickets: TicketResponse[];
   selectedConversation: ConversationSummaryResponse | null;
@@ -26,6 +30,7 @@ type TicketSectionProps = {
   ticketDetailError: string | null;
   ticketUpdateDrafts: Record<string, UpdateTicketRequest>;
   onAddComment: () => void;
+  onAutoRunTicketWorkflowChange: (value: boolean) => void;
   onCreateTicket: () => void;
   onCreateTicketFormChange: Dispatch<SetStateAction<CreateTicketRequest>>;
   onSaveTicket: (ticket: TicketResponse) => void;
@@ -39,10 +44,14 @@ type TicketSectionProps = {
 };
 
 export function TicketSection({
+  autoRunTicketWorkflow,
   busyAction,
   canManageTickets,
   createTicketForm,
   filteredTickets,
+  ticketsLoading = false,
+  ticketsError = null,
+  onRetryTickets,
   isTicketDetailLoading,
   relatedTickets,
   selectedConversation,
@@ -54,6 +63,7 @@ export function TicketSection({
   ticketDetailError,
   ticketUpdateDrafts,
   onAddComment,
+  onAutoRunTicketWorkflowChange,
   onCreateTicket,
   onCreateTicketFormChange,
   onSaveTicket,
@@ -137,6 +147,14 @@ export function TicketSection({
             ))}
           </select>
         </label>
+        <label className="checkbox-field">
+          <input
+            checked={autoRunTicketWorkflow}
+            type="checkbox"
+            onChange={event => onAutoRunTicketWorkflowChange(event.currentTarget.checked)}
+          />
+          创建工单后自动启动 AI 协作
+        </label>
         <button
           className="secondary-button"
           disabled={busyAction !== null || !selectedConversation || !createTicketForm.title?.trim()}
@@ -151,6 +169,9 @@ export function TicketSection({
         filteredTickets={filteredTickets}
         selectedTicketId={selectedTicketId}
         onSelectTicketId={onSelectTicketId}
+        ticketsLoading={ticketsLoading}
+        ticketsError={ticketsError}
+        onRetryTickets={onRetryTickets}
         onSelectRelatedConciergeAppId={onSelectRelatedConciergeAppId}
         onSelectRelatedProjectId={onSelectRelatedProjectId}
         onSelectRelatedCustomerId={onSelectRelatedCustomerId}

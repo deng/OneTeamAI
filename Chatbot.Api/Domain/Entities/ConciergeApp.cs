@@ -35,6 +35,16 @@ public class ConciergeApp : EntityBase
     [MaxLength(128)]
     public string? ChannelLabel { get; set; }
 
+    [MaxLength(2048)]
+    public string? IntakeGuidance { get; set; }
+
+    [MaxLength(2048)]
+    public string? SuggestedPrompts { get; set; }
+
+    public bool RequireEmail { get; set; }
+
+    public bool RequirePhoneNumber { get; set; }
+
     public ConciergeAppStatus Status { get; set; } = ConciergeAppStatus.Draft;
 
     public Guid? PrimaryAiMemberId { get; set; }

@@ -72,6 +72,30 @@ export interface CreateConciergeAppRequest {
      * @type {string}
      * @memberof CreateConciergeAppRequest
      */
+    intakeGuidance?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateConciergeAppRequest
+     */
+    suggestedPrompts?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CreateConciergeAppRequest
+     */
+    requireEmail?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof CreateConciergeAppRequest
+     */
+    requirePhoneNumber?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof CreateConciergeAppRequest
+     */
     primaryAiMemberId?: string | null;
     /**
      * 
@@ -112,6 +136,10 @@ export function CreateConciergeAppRequestFromJSONTyped(json: any, ignoreDiscrimi
         'faqScope': json['faqScope'] == null ? undefined : json['faqScope'],
         'businessHours': json['businessHours'] == null ? undefined : json['businessHours'],
         'channelLabel': json['channelLabel'] == null ? undefined : json['channelLabel'],
+        'intakeGuidance': json['intakeGuidance'] == null ? undefined : json['intakeGuidance'],
+        'suggestedPrompts': json['suggestedPrompts'] == null ? undefined : json['suggestedPrompts'],
+        'requireEmail': json['requireEmail'] == null ? undefined : json['requireEmail'],
+        'requirePhoneNumber': json['requirePhoneNumber'] == null ? undefined : json['requirePhoneNumber'],
         'primaryAiMemberId': json['primaryAiMemberId'] == null ? undefined : json['primaryAiMemberId'],
         'ticketCreationPolicy': json['ticketCreationPolicy'] == null ? undefined : json['ticketCreationPolicy'],
         'humanHandoffPolicy': json['humanHandoffPolicy'] == null ? undefined : json['humanHandoffPolicy'],
@@ -137,8 +165,13 @@ export function CreateConciergeAppRequestToJSONTyped(value?: CreateConciergeAppR
         'faqScope': value['faqScope'],
         'businessHours': value['businessHours'],
         'channelLabel': value['channelLabel'],
+        'intakeGuidance': value['intakeGuidance'],
+        'suggestedPrompts': value['suggestedPrompts'],
+        'requireEmail': value['requireEmail'],
+        'requirePhoneNumber': value['requirePhoneNumber'],
         'primaryAiMemberId': value['primaryAiMemberId'],
         'ticketCreationPolicy': value['ticketCreationPolicy'],
         'humanHandoffPolicy': value['humanHandoffPolicy'],
     };
 }
+

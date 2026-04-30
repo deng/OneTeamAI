@@ -8,4 +8,5 @@ public sealed record UpdateTicketRequest(
     Guid? AssignedMemberId = null,
     string? Category = null,
     DateTimeOffset? DueAt = null,
+    string? ResolutionSummary = null,
     string? ActivityNote = null);

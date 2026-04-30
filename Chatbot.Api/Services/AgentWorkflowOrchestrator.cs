@@ -11,7 +11,8 @@ public sealed class AgentWorkflowOrchestrator
         IReadOnlyList<Member> aiMembers,
         Guid? requestedByUserId,
         Guid? startedByMemberId,
-        string? goal)
+        string? goal,
+        AgentWorkflowTriggerMode triggerMode)
     {
         var orderedMembers = SelectWorkflowMembers(aiMembers);
         var workflowGoal = string.IsNullOrWhiteSpace(goal)
@@ -26,6 +27,7 @@ public sealed class AgentWorkflowOrchestrator
             RequestedByUserId = requestedByUserId,
             StartedByMemberId = startedByMemberId,
             WorkflowType = "conversation-collaboration",
+            TriggerMode = triggerMode,
             Goal = workflowGoal,
             Summary = BuildConversationWorkflowSummary(conversation, orderedMembers),
             Status = AgentWorkflowStatus.Completed,
@@ -43,7 +45,8 @@ public sealed class AgentWorkflowOrchestrator
         IReadOnlyList<Member> aiMembers,
         Guid? requestedByUserId,
         Guid? startedByMemberId,
-        string? goal)
+        string? goal,
+        AgentWorkflowTriggerMode triggerMode)
     {
         var orderedMembers = SelectWorkflowMembers(aiMembers);
         var workflowGoal = string.IsNullOrWhiteSpace(goal)
@@ -57,6 +60,7 @@ public sealed class AgentWorkflowOrchestrator
             RequestedByUserId = requestedByUserId,
             StartedByMemberId = startedByMemberId,
             WorkflowType = "project-collaboration",
+            TriggerMode = triggerMode,
             Goal = workflowGoal,
             Summary = BuildProjectWorkflowSummary(project, orderedMembers),
             Status = AgentWorkflowStatus.Completed,
@@ -74,7 +78,8 @@ public sealed class AgentWorkflowOrchestrator
         IReadOnlyList<Member> aiMembers,
         Guid? requestedByUserId,
         Guid? startedByMemberId,
-        string? goal)
+        string? goal,
+        AgentWorkflowTriggerMode triggerMode)
     {
         var orderedMembers = SelectWorkflowMembers(aiMembers);
         var workflowGoal = string.IsNullOrWhiteSpace(goal)
@@ -90,6 +95,7 @@ public sealed class AgentWorkflowOrchestrator
             RequestedByUserId = requestedByUserId,
             StartedByMemberId = startedByMemberId,
             WorkflowType = "ticket-collaboration",
+            TriggerMode = triggerMode,
             Goal = workflowGoal,
             Summary = BuildWorkflowSummary(ticket, orderedMembers),
             Status = AgentWorkflowStatus.Completed,
@@ -206,7 +212,9 @@ public sealed class AgentWorkflowOrchestrator
             steps.Add(new AgentWorkflowStep
             {
                 MemberId = member.Id,
+                Member = member,
                 HandoffToMemberId = nextMember?.Id,
+                HandoffToMember = nextMember,
                 ActionType = templateKey,
                 InputSummary = BuildInputSummary(ticket, member, index),
                 OutputSummary = BuildOutputSummary(ticket, member, index),
@@ -248,7 +256,9 @@ public sealed class AgentWorkflowOrchestrator
             steps.Add(new AgentWorkflowStep
             {
                 MemberId = member.Id,
+                Member = member,
                 HandoffToMemberId = nextMember?.Id,
+                HandoffToMember = nextMember,
                 ActionType = templateKey,
                 InputSummary = index switch
                 {
@@ -300,7 +310,9 @@ public sealed class AgentWorkflowOrchestrator
             steps.Add(new AgentWorkflowStep
             {
                 MemberId = member.Id,
+                Member = member,
                 HandoffToMemberId = nextMember?.Id,
+                HandoffToMember = nextMember,
                 ActionType = templateKey,
                 InputSummary = index switch
                 {

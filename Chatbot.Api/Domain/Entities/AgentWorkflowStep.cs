@@ -29,6 +29,13 @@ public class AgentWorkflowStep : EntityBase
     [MaxLength(2048)]
     public string OutputSummary { get; set; } = string.Empty;
 
+    [MaxLength(64)]
+    public string? OutputSchemaVersion { get; set; }
+
+    public string? OutputRawResponse { get; set; }
+
+    public string? OutputAttemptTrace { get; set; }
+
     [MaxLength(1024)]
     public string HandoffSummary { get; set; } = string.Empty;
 

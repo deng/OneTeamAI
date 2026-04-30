@@ -1,5 +1,6 @@
 import {
   AgentExecutionLogStatus,
+  AgentWorkflowTriggerMode,
   AgentWorkflowStatus,
   AgentWorkflowStepStatus,
   ConversationParticipantType,
@@ -117,6 +118,15 @@ export function formatNullableText(value?: string | null, fallback = '未设置'
   return trimmed ? trimmed : fallback;
 }
 
+export function formatPreviewText(value?: string | null, maxLength = 180, fallback = '未设置') {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return fallback;
+  }
+
+  return trimmed.length <= maxLength ? trimmed : `${trimmed.slice(0, maxLength).trimEnd()}...`;
+}
+
 export function formatConversationStatus(status?: number) {
   switch (status) {
     case ConversationStatus.NUMBER_0:
@@ -175,6 +185,26 @@ export function formatTicketPriority(priority?: number) {
     default:
       return '未知优先级';
   }
+}
+
+export function formatTicketSlaStatus(
+  dueAt?: Date | null,
+  resolvedAt?: Date | null,
+  status?: number,
+) {
+  if (!dueAt) {
+    return '未设置 SLA';
+  }
+
+  if (resolvedAt) {
+    return resolvedAt.getTime() <= dueAt.getTime() ? '已按时完成' : '已超时完成';
+  }
+
+  if (status === TicketStatus.NUMBER_3 || status === TicketStatus.NUMBER_4) {
+    return '已结束';
+  }
+
+  return dueAt.getTime() < Date.now() ? '已超时' : '进行中';
 }
 
 export function formatCustomerFollowUpStatus(status?: number) {
@@ -263,6 +293,17 @@ export function formatWorkflowStatus(status?: number) {
   }
 }
 
+export function formatWorkflowTriggerMode(triggerMode?: number) {
+  switch (triggerMode) {
+    case AgentWorkflowTriggerMode.NUMBER_0:
+      return '手动触发';
+    case AgentWorkflowTriggerMode.NUMBER_1:
+      return '自动触发';
+    default:
+      return '未知触发方式';
+  }
+}
+
 export function formatWorkflowStepStatus(status?: number) {
   switch (status) {
     case AgentWorkflowStepStatus.NUMBER_0:
@@ -318,9 +359,28 @@ export function formatAuditResult(result?: string | null) {
       return '成功';
     case 'degraded':
       return '降级';
+    case 'conflict':
+      return '冲突';
     case 'failed':
       return '失败';
     default:
       return formatNullableText(result, '未知结果');
+  }
+}
+
+export function formatIntegrationAction(actionType?: string | null) {
+  switch (actionType) {
+    case 'integration.create':
+      return '创建连接';
+    case 'integration.validate':
+      return '校验连接';
+    case 'integration.import_customer':
+      return '导入客户';
+    case 'integration.import_project':
+      return '导入项目';
+    case 'integration.import_ticket':
+      return '导入工单';
+    default:
+      return formatNullableText(actionType, '集成动作');
   }
 }

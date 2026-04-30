@@ -15,6 +15,8 @@ public class AgentWorkflowRunConfiguration : IEntityTypeConfiguration<AgentWorkf
         builder.Property(x => x.WorkflowType).IsRequired();
         builder.Property(x => x.Goal).IsRequired();
         builder.Property(x => x.Summary).IsRequired();
+        builder.Property(x => x.SummarySchemaVersion).HasMaxLength(64);
+        builder.Property(x => x.TriggerMode).IsRequired();
 
         builder.HasOne(x => x.Team)
             .WithMany()

@@ -41,6 +41,11 @@ public class Ticket : ExternalMappedEntityBase
 
     public DateTimeOffset? DueAt { get; set; }
 
+    [MaxLength(4096)]
+    public string? ResolutionSummary { get; set; }
+
+    public DateTimeOffset? ResolvedAt { get; set; }
+
     public DateTimeOffset? LastActivityAt { get; set; }
 
     public Guid? AssignedMemberId { get; set; }

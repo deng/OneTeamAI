@@ -14,7 +14,13 @@
 
 import { mapValues } from '../runtime';
 import type { CustomerFollowUpStatus } from './CustomerFollowUpStatus';
-import { CustomerFollowUpStatusFromJSON, CustomerFollowUpStatusToJSON } from './CustomerFollowUpStatus';
+import {
+    CustomerFollowUpStatusFromJSON,
+    CustomerFollowUpStatusFromJSONTyped,
+    CustomerFollowUpStatusToJSON,
+    CustomerFollowUpStatusToJSONTyped,
+} from './CustomerFollowUpStatus';
+
 /**
  * 
  * @export
@@ -83,6 +89,8 @@ export interface CreateCustomerRequest {
     notes?: string | null;
 }
 
+
+
 /**
  * Check if a given object implements the CreateCustomerRequest interface.
  */
@@ -107,7 +115,7 @@ export function CreateCustomerRequestFromJSONTyped(json: any, ignoreDiscriminato
         'sourceLabel': json['sourceLabel'] == null ? undefined : json['sourceLabel'],
         'tags': json['tags'] == null ? undefined : json['tags'],
         'followUpStatus': json['followUpStatus'] == null ? undefined : CustomerFollowUpStatusFromJSON(json['followUpStatus']),
-        'lastContactedAt': json['lastContactedAt'] == null ? undefined : new Date(json['lastContactedAt']),
+        'lastContactedAt': json['lastContactedAt'] == null ? undefined : (new Date(json['lastContactedAt'])),
         'projectId': json['projectId'] == null ? undefined : json['projectId'],
         'notes': json['notes'] == null ? undefined : json['notes'],
     };
@@ -131,8 +139,9 @@ export function CreateCustomerRequestToJSONTyped(value?: CreateCustomerRequest |
         'sourceLabel': value['sourceLabel'],
         'tags': value['tags'],
         'followUpStatus': CustomerFollowUpStatusToJSON(value['followUpStatus']),
-        'lastContactedAt': value['lastContactedAt']?.toISOString(),
+        'lastContactedAt': value['lastContactedAt'] == null ? value['lastContactedAt'] : value['lastContactedAt'].toISOString(),
         'projectId': value['projectId'],
         'notes': value['notes'],
     };
 }
+

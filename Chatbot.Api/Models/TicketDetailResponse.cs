@@ -16,6 +16,8 @@ public sealed record TicketDetailResponse(
     TicketStatus Status,
     TicketPriority Priority,
     DateTimeOffset? DueAt,
+    string? ResolutionSummary,
+    DateTimeOffset? ResolvedAt,
     DateTimeOffset? LastActivityAt,
     Guid? AssignedMemberId,
     string? AssignedMemberName,

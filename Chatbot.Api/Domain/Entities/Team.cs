@@ -20,6 +20,8 @@ public class Team : EntityBase
 
     public ICollection<Member> Members { get; set; } = [];
 
+    public ICollection<AiMemberTemplate> AiMemberTemplates { get; set; } = [];
+
     public ICollection<Project> Projects { get; set; } = [];
 
     public ICollection<ConciergeApp> ConciergeApps { get; set; } = [];

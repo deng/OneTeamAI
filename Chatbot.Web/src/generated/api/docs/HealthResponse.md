@@ -7,6 +7,16 @@
 Name | Type
 ------------ | -------------
 `status` | string
+`environment` | string
+`databaseReachable` | boolean
+`chatbotConfigured` | boolean
+`activeSessionCount` | number
+`expiredSessionCount` | number
+`teamCount` | number
+`pendingInvitationCount` | number
+`expiredInvitationCount` | number
+`auditLogCount` | number
+`checkedAt` | Date
 
 ## Example
 
@@ -16,6 +26,16 @@ import type { HealthResponse } from ''
 // TODO: Update the object below with actual values
 const example = {
   "status": null,
+  "environment": null,
+  "databaseReachable": null,
+  "chatbotConfigured": null,
+  "activeSessionCount": null,
+  "expiredSessionCount": null,
+  "teamCount": null,
+  "pendingInvitationCount": null,
+  "expiredInvitationCount": null,
+  "auditLogCount": null,
+  "checkedAt": null,
 } satisfies HealthResponse
 
 console.log(example)

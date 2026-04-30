@@ -17,6 +17,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     public DbSet<AIMemberProfile> AiMemberProfiles => Set<AIMemberProfile>();
 
+    public DbSet<AiMemberTemplate> AiMemberTemplates => Set<AiMemberTemplate>();
+
     public DbSet<Project> Projects => Set<Project>();
 
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();

@@ -1,3 +1,5 @@
+import type { AiMemberTemplateResponse, CreateAiMemberRequest } from '../generated/api';
+
 export type PublicConciergeApp = {
   id: string;
   name?: string | null;
@@ -5,8 +7,12 @@ export type PublicConciergeApp = {
   serviceScope?: string | null;
   welcomeMessage?: string | null;
   faqScope?: string | null;
+  intakeGuidance?: string | null;
+  suggestedPrompts?: string | null;
   businessHours?: string | null;
   channelLabel?: string | null;
+  requireEmail?: boolean;
+  requirePhoneNumber?: boolean;
   status?: number;
   teamBrandName?: string | null;
   projectName?: string | null;
@@ -64,6 +70,8 @@ export type TicketDetailItem = {
   status: number;
   priority: number;
   dueAt?: Date | null;
+  resolutionSummary?: string | null;
+  resolvedAt?: Date | null;
   lastActivityAt?: Date | null;
   assignedMemberId?: string | null;
   assignedMemberName?: string | null;
@@ -76,6 +84,25 @@ export type WorkflowTemplateItem = {
   label: string;
   goal: string;
   summary: string;
+};
+
+export type AiMemberTemplateItem = AiMemberTemplateResponse;
+
+export type AiMemberTemplateEditorForm = {
+  key: string;
+  label: string;
+  displayName: string;
+  jobTitle: string;
+  responsibilitySummary: string;
+  title: string;
+  permissionBoundary: string;
+  systemPrompt: string;
+  allowedTools: string;
+  executableActions: string;
+  knowledgeScope: string;
+  isAutonomous: boolean;
+  sortOrder: string;
+  isEnabled: boolean;
 };
 
 export type Feedback = {

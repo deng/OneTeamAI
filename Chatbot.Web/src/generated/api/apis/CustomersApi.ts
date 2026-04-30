@@ -18,6 +18,7 @@ import type {
   ApiErrorResponse,
   CreateCustomerRequest,
   CustomerResponse,
+  UpdateCustomerRequest,
 } from '../models/index';
 import {
     ApiErrorResponseFromJSON,
@@ -26,6 +27,8 @@ import {
     CreateCustomerRequestToJSON,
     CustomerResponseFromJSON,
     CustomerResponseToJSON,
+    UpdateCustomerRequestFromJSON,
+    UpdateCustomerRequestToJSON,
 } from '../models/index';
 
 export interface CreateCustomerOperationRequest {
@@ -35,6 +38,12 @@ export interface CreateCustomerOperationRequest {
 
 export interface ListCustomersRequest {
     teamId: string;
+}
+
+export interface UpdateCustomerOperationRequest {
+    teamId: string;
+    customerId: string;
+    updateCustomerRequest: UpdateCustomerRequest;
 }
 
 /**
@@ -151,6 +160,75 @@ export class CustomersApi extends runtime.BaseAPI {
      */
     async listCustomers(requestParameters: ListCustomersRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<CustomerResponse>> {
         const response = await this.listCustomersRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for updateCustomer without sending the request
+     */
+    async updateCustomerRequestOpts(requestParameters: UpdateCustomerOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling updateCustomer().'
+            );
+        }
+
+        if (requestParameters['customerId'] == null) {
+            throw new runtime.RequiredError(
+                'customerId',
+                'Required parameter "customerId" was null or undefined when calling updateCustomer().'
+            );
+        }
+
+        if (requestParameters['updateCustomerRequest'] == null) {
+            throw new runtime.RequiredError(
+                'updateCustomerRequest',
+                'Required parameter "updateCustomerRequest" was null or undefined when calling updateCustomer().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/customers/{customerId}`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"customerId"}}`, encodeURIComponent(String(requestParameters['customerId'])));
+
+        return {
+            path: urlPath,
+            method: 'PATCH',
+            headers: headerParameters,
+            query: queryParameters,
+            body: UpdateCustomerRequestToJSON(requestParameters['updateCustomerRequest']),
+        };
+    }
+
+    /**
+     */
+    async updateCustomerRaw(requestParameters: UpdateCustomerOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CustomerResponse>> {
+        const requestOptions = await this.updateCustomerRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CustomerResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async updateCustomer(requestParameters: UpdateCustomerOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CustomerResponse> {
+        const response = await this.updateCustomerRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

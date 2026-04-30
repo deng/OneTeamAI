@@ -2,6 +2,14 @@ using Chatbot.Api.Domain.Enums;
 
 namespace Chatbot.Api.Models;
 
+public sealed record AiResponseAttemptResponse(
+    int Attempt,
+    string Outcome,
+    string? SchemaVersion,
+    string? ValidationError,
+    string? RawResponse,
+    DateTimeOffset CreatedAt);
+
 public sealed record AgentExecutionLogResponse(
     Guid Id,
     Guid? MemberId,
@@ -26,6 +34,9 @@ public sealed record AgentWorkflowStepResponse(
     string ActionType,
     string InputSummary,
     string OutputSummary,
+    string? OutputSchemaVersion,
+    string? OutputRawResponse,
+    IReadOnlyList<AiResponseAttemptResponse> OutputAttempts,
     string HandoffSummary,
     AgentWorkflowStepStatus Status,
     DateTimeOffset? ExecutedAt,
@@ -38,8 +49,12 @@ public sealed record AgentWorkflowResponse(
     Guid? ConversationId,
     Guid? TicketId,
     string WorkflowType,
+    AgentWorkflowTriggerMode TriggerMode,
     string Goal,
     string Summary,
+    string? SummarySchemaVersion,
+    string? SummaryRawResponse,
+    IReadOnlyList<AiResponseAttemptResponse> SummaryAttempts,
     AgentWorkflowStatus Status,
     Guid? RequestedByUserId,
     Guid? StartedByMemberId,

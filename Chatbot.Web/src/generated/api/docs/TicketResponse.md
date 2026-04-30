@@ -15,8 +15,13 @@ Name | Type
 `conversationId` | string
 `title` | string
 `summary` | string
+`category` | string
 `status` | [TicketStatus](TicketStatus.md)
 `priority` | [TicketPriority](TicketPriority.md)
+`dueAt` | Date
+`resolutionSummary` | string
+`resolvedAt` | Date
+`lastActivityAt` | Date
 `assignedMemberId` | string
 `assignedMemberName` | string
 `sourceType` | [RecordSourceType](RecordSourceType.md)
@@ -40,8 +45,13 @@ const example = {
   "conversationId": null,
   "title": null,
   "summary": null,
+  "category": null,
   "status": null,
   "priority": null,
+  "dueAt": null,
+  "resolutionSummary": null,
+  "resolvedAt": null,
+  "lastActivityAt": null,
   "assignedMemberId": null,
   "assignedMemberName": null,
   "sourceType": null,

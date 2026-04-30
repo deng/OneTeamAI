@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Chatbot.Api.Domain.Entities;
 using Chatbot.Api.Domain.Enums;
 using Chatbot.Api.Integrations.DependencyInjection;
@@ -88,6 +89,7 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddAGUI();
 builder.Services.AddSingleton<ChatbotAgentRuntime>();
+builder.Services.AddSingleton<IWorkflowTextCompletionService>(sp => sp.GetRequiredService<ChatbotAgentRuntime>());
 builder.Services.AddScoped<AuditLogService>();
 builder.Services.AddScoped<AgentWorkflowOrchestrator>();
 builder.Services.AddScoped<AgentWorkflowExecutionService>();
@@ -100,6 +102,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await dbContext.Database.MigrateAsync();
+    await EnsureDefaultAiMemberTemplatesAsync(dbContext);
 }
 
 app.UseCors("frontend");
@@ -158,28 +161,28 @@ app.MapGet("/health", async (
         await ExpirePendingInvitationsAsync(dbContext, cancellationToken);
     }
 
+    var now = DateTimeOffset.UtcNow;
+    var userSessions = databaseReachable
+        ? await dbContext.UserSessions.ToListAsync(cancellationToken)
+        : [];
+    var teamInvitations = databaseReachable
+        ? await dbContext.TeamInvitations.ToListAsync(cancellationToken)
+        : [];
+
     var activeSessionCount = databaseReachable
-        ? await dbContext.UserSessions.CountAsync(
-            session => session.RevokedAt == null && session.ExpiresAt > DateTimeOffset.UtcNow,
-            cancellationToken)
+        ? userSessions.Count(session => session.RevokedAt == null && session.ExpiresAt > now)
         : 0;
     var expiredSessionCount = databaseReachable
-        ? await dbContext.UserSessions.CountAsync(
-            session => session.ExpiresAt <= DateTimeOffset.UtcNow,
-            cancellationToken)
+        ? userSessions.Count(session => session.ExpiresAt <= now)
         : 0;
     var teamCount = databaseReachable
         ? await dbContext.Teams.CountAsync(cancellationToken)
         : 0;
     var pendingInvitationCount = databaseReachable
-        ? await dbContext.TeamInvitations.CountAsync(
-            invitation => invitation.Status == InvitationStatus.Pending && invitation.ExpiresAt > DateTimeOffset.UtcNow,
-            cancellationToken)
+        ? teamInvitations.Count(invitation => invitation.Status == InvitationStatus.Pending && invitation.ExpiresAt > now)
         : 0;
     var expiredInvitationCount = databaseReachable
-        ? await dbContext.TeamInvitations.CountAsync(
-            invitation => invitation.Status == InvitationStatus.Expired,
-            cancellationToken)
+        ? teamInvitations.Count(invitation => invitation.Status == InvitationStatus.Expired)
         : 0;
     var auditLogCount = databaseReachable
         ? await dbContext.AuditLogs.CountAsync(cancellationToken)
@@ -420,8 +423,11 @@ app.MapPost("/api/auth/logout-all", async (
     }
 
     var sessions = await dbContext.UserSessions
-        .Where(x => x.UserId == currentSession.UserId && x.RevokedAt == null && x.ExpiresAt > DateTimeOffset.UtcNow)
+        .Where(x => x.UserId == currentSession.UserId && x.RevokedAt == null)
         .ToListAsync(cancellationToken);
+    sessions = sessions
+        .Where(x => x.ExpiresAt > DateTimeOffset.UtcNow)
+        .ToList();
 
     var now = DateTimeOffset.UtcNow;
     foreach (var session in sessions)
@@ -451,18 +457,262 @@ app.MapPost("/api/auth/logout-all", async (
 .WithName("LogoutAllSessions")
 .WithTags("Auth");
 
-app.MapGet("/api/ai-member-templates", (HttpContext httpContext) =>
+app.MapGet("/api/ai-member-templates", async (
+    HttpContext httpContext,
+    AppDbContext dbContext,
+    Guid? teamId,
+    bool? includeDisabled,
+    CancellationToken cancellationToken) =>
 {
-    if (string.IsNullOrWhiteSpace(ExtractBearerToken(httpContext.Request)))
+    if (teamId.HasValue)
+    {
+        var accessError = await EnsureTeamAccessAsync(httpContext, dbContext, teamId.Value, cancellationToken);
+        if (accessError is not null)
+        {
+            return accessError;
+        }
+
+        var teamExists = await dbContext.Teams.AnyAsync(team => team.Id == teamId.Value, cancellationToken);
+        if (!teamExists)
+        {
+            return NotFoundError("team was not found", "team_not_found");
+        }
+    }
+    else if (await GetCurrentSessionAsync(httpContext, dbContext, cancellationToken) is null)
     {
         return UnauthorizedError();
     }
 
-    return Results.Ok(GetDefaultAiMemberTemplates());
+    var templatesQuery = dbContext.AiMemberTemplates
+        .AsNoTracking()
+        .Where(template => teamId.HasValue
+            ? template.TeamId == null || template.TeamId == teamId.Value
+            : template.TeamId == null);
+
+    if (includeDisabled != true)
+    {
+        templatesQuery = templatesQuery.Where(template => template.IsEnabled);
+    }
+
+    var templates = await templatesQuery
+        .OrderBy(template => template.TeamId == null ? 0 : 1)
+        .ThenBy(template => template.SortOrder)
+        .ThenBy(template => template.Label)
+        .ToListAsync(cancellationToken);
+
+    return Results.Ok(templates.Select(ToAiMemberTemplateResponse).ToList());
 })
 .Produces<List<AiMemberTemplateResponse>>(StatusCodes.Status200OK)
 .Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+.Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
+.Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
 .WithName("ListAiMemberTemplates")
+.WithTags("Members");
+
+app.MapPost("/api/teams/{teamId:guid}/ai-member-templates", async (
+    HttpContext httpContext,
+    Guid teamId,
+    CreateAiMemberTemplateRequest request,
+    AppDbContext dbContext,
+    CancellationToken cancellationToken) =>
+{
+    var accessError = await EnsureTeamManagementAccessAsync(httpContext, dbContext, teamId, cancellationToken);
+    if (accessError is not null)
+    {
+        return accessError;
+    }
+
+    var teamExists = await dbContext.Teams.AnyAsync(team => team.Id == teamId, cancellationToken);
+    if (!teamExists)
+    {
+        return NotFoundError("team was not found", "team_not_found");
+    }
+
+    var label = request.Label.Trim();
+    var displayName = request.DisplayName.Trim();
+    var jobTitle = request.JobTitle.Trim();
+    var responsibilitySummary = request.ResponsibilitySummary.Trim();
+
+    if (string.IsNullOrWhiteSpace(label) ||
+        string.IsNullOrWhiteSpace(displayName) ||
+        string.IsNullOrWhiteSpace(jobTitle) ||
+        string.IsNullOrWhiteSpace(responsibilitySummary))
+    {
+        return BadRequestError(
+            "label, displayName, jobTitle and responsibilitySummary are required",
+            "ai_member_template_required_fields");
+    }
+
+    string key;
+    if (string.IsNullOrWhiteSpace(request.Key))
+    {
+        key = await GenerateAiMemberTemplateKeyAsync(dbContext, label, cancellationToken);
+    }
+    else
+    {
+        key = NormalizeAiMemberTemplateKey(request.Key);
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return BadRequestError("template key format is invalid", "invalid_ai_member_template_key");
+        }
+
+        var keyExists = await dbContext.AiMemberTemplates.AnyAsync(template => template.Key == key, cancellationToken);
+        if (keyExists)
+        {
+            return ConflictError("template key already exists", "ai_member_template_key_conflict");
+        }
+    }
+
+    var maxSortOrder = await dbContext.AiMemberTemplates
+        .Where(template => template.TeamId == teamId)
+        .Select(template => (int?)template.SortOrder)
+        .MaxAsync(cancellationToken);
+
+    var template = new AiMemberTemplate
+    {
+        TeamId = teamId,
+        Key = key,
+        Label = label,
+        DisplayName = displayName,
+        JobTitle = jobTitle,
+        ResponsibilitySummary = responsibilitySummary,
+        Title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim(),
+        PermissionBoundary = string.IsNullOrWhiteSpace(request.PermissionBoundary) ? null : request.PermissionBoundary.Trim(),
+        SystemPrompt = string.IsNullOrWhiteSpace(request.SystemPrompt) ? null : request.SystemPrompt.Trim(),
+        AllowedTools = string.IsNullOrWhiteSpace(request.AllowedTools) ? null : request.AllowedTools.Trim(),
+        ExecutableActions = string.IsNullOrWhiteSpace(request.ExecutableActions) ? null : request.ExecutableActions.Trim(),
+        KnowledgeScope = string.IsNullOrWhiteSpace(request.KnowledgeScope) ? null : request.KnowledgeScope.Trim(),
+        IsAutonomous = request.IsAutonomous,
+        IsBuiltIn = false,
+        IsEnabled = true,
+        SortOrder = request.SortOrder ?? ((maxSortOrder ?? 0) + 100)
+    };
+
+    dbContext.AiMemberTemplates.Add(template);
+    await dbContext.SaveChangesAsync(cancellationToken);
+
+    return Results.Created(
+        $"/api/teams/{teamId}/ai-member-templates/{template.Id}",
+        ToAiMemberTemplateResponse(template));
+})
+.Produces<AiMemberTemplateResponse>(StatusCodes.Status201Created)
+.Produces<ApiErrorResponse>(StatusCodes.Status400BadRequest)
+.Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+.Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
+.Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+.Produces<ApiErrorResponse>(StatusCodes.Status409Conflict)
+.WithName("CreateAiMemberTemplate")
+.WithTags("Members");
+
+app.MapPut("/api/teams/{teamId:guid}/ai-member-templates/{templateId:guid}", async (
+    HttpContext httpContext,
+    Guid teamId,
+    Guid templateId,
+    UpdateAiMemberTemplateRequest request,
+    AppDbContext dbContext,
+    CancellationToken cancellationToken) =>
+{
+    var accessError = await EnsureTeamManagementAccessAsync(httpContext, dbContext, teamId, cancellationToken);
+    if (accessError is not null)
+    {
+        return accessError;
+    }
+
+    var template = await dbContext.AiMemberTemplates
+        .FirstOrDefaultAsync(x => x.Id == templateId && x.TeamId == teamId, cancellationToken);
+    if (template is null)
+    {
+        return NotFoundError("template was not found", "ai_member_template_not_found");
+    }
+
+    if (template.IsBuiltIn)
+    {
+        return ConflictError("built-in templates cannot be modified", "ai_member_template_builtin_locked");
+    }
+
+    var label = request.Label.Trim();
+    var displayName = request.DisplayName.Trim();
+    var jobTitle = request.JobTitle.Trim();
+    var responsibilitySummary = request.ResponsibilitySummary.Trim();
+
+    if (string.IsNullOrWhiteSpace(label) ||
+        string.IsNullOrWhiteSpace(displayName) ||
+        string.IsNullOrWhiteSpace(jobTitle) ||
+        string.IsNullOrWhiteSpace(responsibilitySummary))
+    {
+        return BadRequestError(
+            "label, displayName, jobTitle and responsibilitySummary are required",
+            "ai_member_template_required_fields");
+    }
+
+    template.Label = label;
+    template.DisplayName = displayName;
+    template.JobTitle = jobTitle;
+    template.ResponsibilitySummary = responsibilitySummary;
+    template.Title = string.IsNullOrWhiteSpace(request.Title) ? null : request.Title.Trim();
+    template.PermissionBoundary = string.IsNullOrWhiteSpace(request.PermissionBoundary) ? null : request.PermissionBoundary.Trim();
+    template.SystemPrompt = string.IsNullOrWhiteSpace(request.SystemPrompt) ? null : request.SystemPrompt.Trim();
+    template.AllowedTools = string.IsNullOrWhiteSpace(request.AllowedTools) ? null : request.AllowedTools.Trim();
+    template.ExecutableActions = string.IsNullOrWhiteSpace(request.ExecutableActions) ? null : request.ExecutableActions.Trim();
+    template.KnowledgeScope = string.IsNullOrWhiteSpace(request.KnowledgeScope) ? null : request.KnowledgeScope.Trim();
+    template.IsAutonomous = request.IsAutonomous;
+    template.IsEnabled = request.IsEnabled;
+    if (request.SortOrder.HasValue)
+    {
+        template.SortOrder = request.SortOrder.Value;
+    }
+
+    template.UpdatedAt = DateTimeOffset.UtcNow;
+    await dbContext.SaveChangesAsync(cancellationToken);
+
+    return Results.Ok(ToAiMemberTemplateResponse(template));
+})
+.Produces<AiMemberTemplateResponse>(StatusCodes.Status200OK)
+.Produces<ApiErrorResponse>(StatusCodes.Status400BadRequest)
+.Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+.Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
+.Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+.Produces<ApiErrorResponse>(StatusCodes.Status409Conflict)
+.WithName("UpdateAiMemberTemplate")
+.WithTags("Members");
+
+app.MapDelete("/api/teams/{teamId:guid}/ai-member-templates/{templateId:guid}", async (
+    HttpContext httpContext,
+    Guid teamId,
+    Guid templateId,
+    AppDbContext dbContext,
+    CancellationToken cancellationToken) =>
+{
+    var accessError = await EnsureTeamManagementAccessAsync(httpContext, dbContext, teamId, cancellationToken);
+    if (accessError is not null)
+    {
+        return accessError;
+    }
+
+    var template = await dbContext.AiMemberTemplates
+        .FirstOrDefaultAsync(x => x.Id == templateId && x.TeamId == teamId, cancellationToken);
+    if (template is null)
+    {
+        return NotFoundError("template was not found", "ai_member_template_not_found");
+    }
+
+    if (template.IsBuiltIn)
+    {
+        return ConflictError("built-in templates cannot be disabled", "ai_member_template_builtin_locked");
+    }
+
+    template.IsEnabled = false;
+    template.UpdatedAt = DateTimeOffset.UtcNow;
+    await dbContext.SaveChangesAsync(cancellationToken);
+
+    return Results.Ok(ToAiMemberTemplateResponse(template));
+})
+.Produces<AiMemberTemplateResponse>(StatusCodes.Status200OK)
+.Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+.Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
+.Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+.Produces<ApiErrorResponse>(StatusCodes.Status409Conflict)
+.WithName("DisableAiMemberTemplate")
 .WithTags("Members");
 
 app.MapGet("/api/workflow-templates", (HttpContext httpContext, string? scope) =>
@@ -1184,11 +1434,10 @@ app.MapPost("/api/teams/{teamId:guid}/invitations", async (
         .FirstOrDefaultAsync(
             x => x.TeamId == teamId
                 && x.Email == email
-                && x.Status == InvitationStatus.Pending
-                && x.ExpiresAt > DateTimeOffset.UtcNow,
+                && x.Status == InvitationStatus.Pending,
             cancellationToken);
 
-    if (pendingInvitation is not null)
+    if (pendingInvitation is not null && pendingInvitation.ExpiresAt > DateTimeOffset.UtcNow)
     {
         return ConflictError("a pending invitation already exists for this email", "pending_invitation_exists");
     }
@@ -1701,6 +1950,10 @@ app.MapPost("/api/teams/{teamId:guid}/concierge-apps", async (
         FaqScope = string.IsNullOrWhiteSpace(request.FaqScope) ? null : request.FaqScope.Trim(),
         BusinessHours = string.IsNullOrWhiteSpace(request.BusinessHours) ? null : request.BusinessHours.Trim(),
         ChannelLabel = string.IsNullOrWhiteSpace(request.ChannelLabel) ? null : request.ChannelLabel.Trim(),
+        IntakeGuidance = string.IsNullOrWhiteSpace(request.IntakeGuidance) ? null : request.IntakeGuidance.Trim(),
+        SuggestedPrompts = string.IsNullOrWhiteSpace(request.SuggestedPrompts) ? null : request.SuggestedPrompts.Trim(),
+        RequireEmail = request.RequireEmail,
+        RequirePhoneNumber = request.RequirePhoneNumber,
         Status = ConciergeAppStatus.Draft,
         PrimaryAiMemberId = primaryAiMember?.Id,
         TicketCreationPolicy = string.IsNullOrWhiteSpace(request.TicketCreationPolicy) ? null : request.TicketCreationPolicy.Trim(),
@@ -1804,6 +2057,10 @@ app.MapPatch("/api/teams/{teamId:guid}/concierge-apps/{conciergeAppId:guid}", as
     conciergeApp.FaqScope = string.IsNullOrWhiteSpace(request.FaqScope) ? null : request.FaqScope.Trim();
     conciergeApp.BusinessHours = string.IsNullOrWhiteSpace(request.BusinessHours) ? null : request.BusinessHours.Trim();
     conciergeApp.ChannelLabel = string.IsNullOrWhiteSpace(request.ChannelLabel) ? null : request.ChannelLabel.Trim();
+    conciergeApp.IntakeGuidance = string.IsNullOrWhiteSpace(request.IntakeGuidance) ? null : request.IntakeGuidance.Trim();
+    conciergeApp.SuggestedPrompts = string.IsNullOrWhiteSpace(request.SuggestedPrompts) ? null : request.SuggestedPrompts.Trim();
+    conciergeApp.RequireEmail = request.RequireEmail;
+    conciergeApp.RequirePhoneNumber = request.RequirePhoneNumber;
     conciergeApp.Status = request.Status;
     conciergeApp.PrimaryAiMemberId = primaryAiMemberId;
     conciergeApp.TicketCreationPolicy = string.IsNullOrWhiteSpace(request.TicketCreationPolicy) ? null : request.TicketCreationPolicy.Trim();
@@ -1845,6 +2102,10 @@ app.MapGet("/api/public/concierge-apps/{conciergeAppId:guid}", async (
         conciergeApp.FaqScope,
         conciergeApp.BusinessHours,
         conciergeApp.ChannelLabel,
+        conciergeApp.IntakeGuidance,
+        conciergeApp.SuggestedPrompts,
+        conciergeApp.RequireEmail,
+        conciergeApp.RequirePhoneNumber,
         conciergeApp.Status,
         conciergeApp.Team?.BrandName,
         conciergeApp.Project?.Name));
@@ -1877,6 +2138,7 @@ app.MapPost("/api/public/concierge-apps/{conciergeAppId:guid}/intake", async (
     var displayName = request.DisplayName.Trim();
     var message = request.Message.Trim();
     var email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+    var phoneNumber = string.IsNullOrWhiteSpace(request.PhoneNumber) ? null : request.PhoneNumber.Trim();
     var companyName = string.IsNullOrWhiteSpace(request.CompanyName) ? null : request.CompanyName.Trim();
 
     if (string.IsNullOrWhiteSpace(displayName))
@@ -1894,6 +2156,16 @@ app.MapPost("/api/public/concierge-apps/{conciergeAppId:guid}/intake", async (
         return BadRequestError("email format is invalid", "invalid_email");
     }
 
+    if (conciergeApp.RequireEmail && email is null)
+    {
+        return BadRequestError("email is required", "email_required");
+    }
+
+    if (conciergeApp.RequirePhoneNumber && phoneNumber is null)
+    {
+        return BadRequestError("phone number is required", "phone_number_required");
+    }
+
     Customer? customer = null;
     if (email is not null)
     {
@@ -1908,6 +2180,7 @@ app.MapPost("/api/public/concierge-apps/{conciergeAppId:guid}/intake", async (
             TeamId = conciergeApp.TeamId,
             DisplayName = displayName,
             Email = email,
+            PhoneNumber = phoneNumber,
             CompanyName = companyName,
             SourceLabel = conciergeApp.ChannelLabel,
             Status = email is null ? CustomerStatus.Anonymous : CustomerStatus.Active,
@@ -1917,6 +2190,7 @@ app.MapPost("/api/public/concierge-apps/{conciergeAppId:guid}/intake", async (
     else
     {
         customer.DisplayName = displayName;
+        customer.PhoneNumber = phoneNumber ?? customer.PhoneNumber;
         customer.CompanyName = companyName ?? customer.CompanyName;
         customer.SourceLabel ??= conciergeApp.ChannelLabel;
         customer.UpdatedAt = DateTimeOffset.UtcNow;
@@ -2633,7 +2907,8 @@ app.MapPost("/api/teams/{teamId:guid}/tickets/{ticketId:guid}/workflows", async 
         aiMembers,
         session?.UserId,
         startedByMember?.Id,
-        request.Goal);
+        request.Goal,
+        request.TriggerMode);
 
     var integrationConnections = await dbContext.IntegrationConnections
         .Where(x => x.TeamId == teamId)
@@ -2755,7 +3030,8 @@ app.MapPost("/api/teams/{teamId:guid}/conversations/{conversationId:guid}/workfl
         aiMembers,
         session?.UserId,
         startedByMember?.Id,
-        request.Goal);
+        request.Goal,
+        request.TriggerMode);
 
     var integrationConnections = await dbContext.IntegrationConnections
         .Where(x => x.TeamId == teamId)
@@ -2859,7 +3135,8 @@ app.MapPost("/api/teams/{teamId:guid}/projects/{projectId:guid}/workflows", asyn
         aiMembers,
         session?.UserId,
         startedByMember?.Id,
-        request.Goal);
+        request.Goal,
+        request.TriggerMode);
 
     var integrationConnections = await dbContext.IntegrationConnections
         .Where(x => x.TeamId == teamId)
@@ -3257,6 +3534,135 @@ app.MapGet("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/customers"
 .WithName("PreviewIntegrationCustomers")
 .WithTags("Integrations");
 
+app.MapPost("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/customers/import", async (
+    HttpContext httpContext,
+    Guid teamId,
+    Guid connectionId,
+    ImportIntegrationCustomerRequest request,
+    AppDbContext dbContext,
+    AuditLogService auditLogService,
+    IEnumerable<ICustomerProvider> providers,
+    CancellationToken cancellationToken) =>
+{
+    var accessError = await EnsureTeamManagementAccessAsync(httpContext, dbContext, teamId, cancellationToken);
+    if (accessError is not null)
+    {
+        return accessError;
+    }
+
+    var externalRecordId = request.ExternalRecordId.Trim();
+    if (string.IsNullOrWhiteSpace(externalRecordId))
+    {
+        return BadRequestError("externalRecordId is required", "integration_customer_import_required_id");
+    }
+
+    if (request.ProjectId.HasValue)
+    {
+        var projectExists = await dbContext.Projects.AnyAsync(
+            project => project.Id == request.ProjectId.Value && project.TeamId == teamId,
+            cancellationToken);
+        if (!projectExists)
+        {
+            return BadRequestError("projectId does not belong to the team", "invalid_project_id");
+        }
+    }
+
+    var connection = await LoadIntegrationConnectionAsync(dbContext, teamId, connectionId, cancellationToken);
+    if (connection is null)
+    {
+        return NotFoundError("integration connection was not found", "integration_connection_not_found");
+    }
+
+    var provider = ResolveAdapter(providers, connection.ExternalSystemType);
+    if (provider is null)
+    {
+        return BadRequestError("this connection does not support customer import", "integration_capability_not_supported");
+    }
+
+    var records = await provider.ListCustomersAsync(provider.BuildDescriptor(connection), cancellationToken);
+    var record = records.FirstOrDefault(item => string.Equals(item.Id, externalRecordId, StringComparison.Ordinal));
+    if (record is null)
+    {
+        return NotFoundError("integration customer record was not found", "integration_customer_not_found");
+    }
+
+    var customer = await dbContext.Customers.FirstOrDefaultAsync(
+        item =>
+            item.TeamId == teamId
+            && item.ExternalSystemType == connection.ExternalSystemType
+            && item.ExternalId == externalRecordId,
+        cancellationToken);
+
+    var isNew = customer is null;
+    if (!isNew && !request.ForceUpdate)
+    {
+        var conflictSession = await GetCurrentSessionAsync(httpContext, dbContext, cancellationToken);
+        await auditLogService.WriteAsync(
+            dbContext,
+            httpContext,
+            "integration.import_customer",
+            "customer",
+            customer!.Id,
+            $"Customer {customer.DisplayName} import conflicted from {connection.Name}.",
+            conflictSession?.UserId,
+            teamId,
+            "conflict",
+            cancellationToken);
+        return ConflictError(
+            "integration customer already imported, use forceUpdate to sync",
+            "integration_customer_already_imported");
+    }
+
+    if (customer is null)
+    {
+        customer = new Customer
+        {
+            TeamId = teamId,
+            SourceType = RecordSourceType.External,
+            ExternalSystemType = connection.ExternalSystemType,
+            ExternalId = externalRecordId,
+            Status = CustomerStatus.Active,
+        };
+        dbContext.Customers.Add(customer);
+    }
+
+    customer.DisplayName = record.DisplayName.Trim();
+    customer.SourceLabel = connection.Name;
+    customer.CompanyName = string.IsNullOrWhiteSpace(record.Summary) ? customer.CompanyName : record.Summary.Trim();
+    customer.ProjectId = request.ProjectId ?? customer.ProjectId;
+    customer.Tags = string.IsNullOrWhiteSpace(request.Tags) ? customer.Tags : request.Tags.Trim();
+    customer.FollowUpStatus = CustomerFollowUpStatus.New;
+    customer.LastContactedAt = DateTimeOffset.UtcNow;
+
+    await dbContext.SaveChangesAsync(cancellationToken);
+
+    var session = await GetCurrentSessionAsync(httpContext, dbContext, cancellationToken);
+    await auditLogService.WriteAsync(
+        dbContext,
+        httpContext,
+        "integration.import_customer",
+        "customer",
+        customer.Id,
+        $"Customer {customer.DisplayName} {(isNew ? "imported" : "synced")} from {connection.Name}.",
+        session?.UserId,
+        teamId,
+        "success",
+        cancellationToken);
+
+    return isNew
+        ? Results.Created($"/api/teams/{teamId}/customers/{customer.Id}", ToCustomerResponse(customer))
+        : Results.Ok(ToCustomerResponse(customer));
+})
+.Produces<CustomerResponse>(StatusCodes.Status200OK)
+.Produces<CustomerResponse>(StatusCodes.Status201Created)
+.Produces<ApiErrorResponse>(StatusCodes.Status400BadRequest)
+.Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+.Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
+.Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+.Produces<ApiErrorResponse>(StatusCodes.Status409Conflict)
+.WithName("ImportIntegrationCustomer")
+.WithTags("Integrations");
+
 app.MapGet("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/projects", async (
     HttpContext httpContext,
     Guid teamId,
@@ -3294,6 +3700,140 @@ app.MapGet("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/projects",
 .WithName("PreviewIntegrationProjects")
 .WithTags("Integrations");
 
+app.MapPost("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/projects/import", async (
+    HttpContext httpContext,
+    Guid teamId,
+    Guid connectionId,
+    ImportIntegrationProjectRequest request,
+    AppDbContext dbContext,
+    AuditLogService auditLogService,
+    IEnumerable<IProjectProvider> providers,
+    CancellationToken cancellationToken) =>
+{
+    var accessError = await EnsureTeamManagementAccessAsync(httpContext, dbContext, teamId, cancellationToken);
+    if (accessError is not null)
+    {
+        return accessError;
+    }
+
+    var externalRecordId = request.ExternalRecordId.Trim();
+    if (string.IsNullOrWhiteSpace(externalRecordId))
+    {
+        return BadRequestError("externalRecordId is required", "integration_project_import_required_id");
+    }
+
+    Member? leadMember = null;
+    if (request.LeadMemberId.HasValue)
+    {
+        leadMember = await dbContext.Members.FirstOrDefaultAsync(
+            member => member.Id == request.LeadMemberId.Value && member.TeamId == teamId,
+            cancellationToken);
+        if (leadMember is null)
+        {
+            return BadRequestError("leadMemberId does not belong to the team", "invalid_lead_member_id");
+        }
+    }
+
+    var connection = await LoadIntegrationConnectionAsync(dbContext, teamId, connectionId, cancellationToken);
+    if (connection is null)
+    {
+        return NotFoundError("integration connection was not found", "integration_connection_not_found");
+    }
+
+    var provider = ResolveAdapter(providers, connection.ExternalSystemType);
+    if (provider is null)
+    {
+        return BadRequestError("this connection does not support project import", "integration_capability_not_supported");
+    }
+
+    var records = await provider.ListProjectsAsync(provider.BuildDescriptor(connection), cancellationToken);
+    var record = records.FirstOrDefault(item => string.Equals(item.Id, externalRecordId, StringComparison.Ordinal));
+    if (record is null)
+    {
+        return NotFoundError("integration project record was not found", "integration_project_not_found");
+    }
+
+    var project = await dbContext.Projects
+        .Include(item => item.ProjectMembers)
+        .FirstOrDefaultAsync(
+            item =>
+                item.TeamId == teamId
+                && item.ExternalSystemType == connection.ExternalSystemType
+                && item.ExternalId == externalRecordId,
+            cancellationToken);
+
+    var isNew = project is null;
+    if (!isNew && !request.ForceUpdate)
+    {
+        var conflictSession = await GetCurrentSessionAsync(httpContext, dbContext, cancellationToken);
+        await auditLogService.WriteAsync(
+            dbContext,
+            httpContext,
+            "integration.import_project",
+            "project",
+            project!.Id,
+            $"Project {project.Name} import conflicted from {connection.Name}.",
+            conflictSession?.UserId,
+            teamId,
+            "conflict",
+            cancellationToken);
+        return ConflictError(
+            "integration project already imported, use forceUpdate to sync",
+            "integration_project_already_imported");
+    }
+
+    if (project is null)
+    {
+        project = new Project
+        {
+            TeamId = teamId,
+            SourceType = RecordSourceType.External,
+            ExternalSystemType = connection.ExternalSystemType,
+            ExternalId = externalRecordId,
+            Status = ProjectStatus.Active,
+        };
+        dbContext.Projects.Add(project);
+    }
+
+    project.Name = record.DisplayName.Trim();
+    project.StageLabel = string.IsNullOrWhiteSpace(record.Summary) ? project.StageLabel : record.Summary.Trim();
+    project.Summary = $"Imported from {connection.Name}";
+    project.LeadMemberId = leadMember?.Id ?? project.LeadMemberId;
+
+    await dbContext.SaveChangesAsync(cancellationToken);
+
+    var ticketCount = await dbContext.Tickets.CountAsync(ticket => ticket.ProjectId == project.Id, cancellationToken);
+    var customerCount = await dbContext.Customers.CountAsync(customer => customer.ProjectId == project.Id, cancellationToken);
+    var participantMemberIds = project.ProjectMembers.Select(member => member.MemberId).ToList();
+
+    var session = await GetCurrentSessionAsync(httpContext, dbContext, cancellationToken);
+    await auditLogService.WriteAsync(
+        dbContext,
+        httpContext,
+        "integration.import_project",
+        "project",
+        project.Id,
+        $"Project {project.Name} {(isNew ? "imported" : "synced")} from {connection.Name}.",
+        session?.UserId,
+        teamId,
+        "success",
+        cancellationToken);
+
+    var response = ToProjectResponse(project, ticketCount, customerCount, participantMemberIds);
+    return isNew
+        ? Results.Created($"/api/teams/{teamId}/projects/{project.Id}", response)
+        : Results.Ok(response);
+})
+.Produces<ProjectResponse>(StatusCodes.Status200OK)
+.Produces<ProjectResponse>(StatusCodes.Status201Created)
+.Produces<ApiErrorResponse>(StatusCodes.Status400BadRequest)
+.Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+.Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
+.Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+.Produces<ApiErrorResponse>(StatusCodes.Status409Conflict)
+.WithName("ImportIntegrationProject")
+.WithTags("Integrations");
+
 app.MapGet("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/tickets", async (
     HttpContext httpContext,
     Guid teamId,
@@ -3329,6 +3869,148 @@ app.MapGet("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/tickets", 
 .Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
 .Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
 .WithName("PreviewIntegrationTickets")
+.WithTags("Integrations");
+
+app.MapPost("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/tickets/import", async (
+    HttpContext httpContext,
+    Guid teamId,
+    Guid connectionId,
+    ImportIntegrationTicketRequest request,
+    AppDbContext dbContext,
+    AuditLogService auditLogService,
+    IEnumerable<ITicketProvider> providers,
+    CancellationToken cancellationToken) =>
+{
+    var accessError = await EnsureTeamManagementAccessAsync(httpContext, dbContext, teamId, cancellationToken);
+    if (accessError is not null)
+    {
+        return accessError;
+    }
+
+    var externalRecordId = request.ExternalRecordId.Trim();
+    if (string.IsNullOrWhiteSpace(externalRecordId))
+    {
+        return BadRequestError("externalRecordId is required", "integration_ticket_import_required_id");
+    }
+
+    var project = await dbContext.Projects.FirstOrDefaultAsync(
+        item => item.Id == request.ProjectId && item.TeamId == teamId,
+        cancellationToken);
+    if (project is null)
+    {
+        return BadRequestError("projectId does not belong to the team", "invalid_project_id");
+    }
+
+    Customer? customer = null;
+    if (request.CustomerId.HasValue)
+    {
+        customer = await dbContext.Customers.FirstOrDefaultAsync(
+            item => item.Id == request.CustomerId.Value && item.TeamId == teamId,
+            cancellationToken);
+        if (customer is null)
+        {
+            return BadRequestError("customerId does not belong to the team", "invalid_customer_id");
+        }
+    }
+
+    var connection = await LoadIntegrationConnectionAsync(dbContext, teamId, connectionId, cancellationToken);
+    if (connection is null)
+    {
+        return NotFoundError("integration connection was not found", "integration_connection_not_found");
+    }
+
+    var provider = ResolveAdapter(providers, connection.ExternalSystemType);
+    if (provider is null)
+    {
+        return BadRequestError("this connection does not support ticket import", "integration_capability_not_supported");
+    }
+
+    var records = await provider.ListTicketsAsync(provider.BuildDescriptor(connection), cancellationToken);
+    var record = records.FirstOrDefault(item => string.Equals(item.Id, externalRecordId, StringComparison.Ordinal));
+    if (record is null)
+    {
+        return NotFoundError("integration ticket record was not found", "integration_ticket_not_found");
+    }
+
+    var ticket = await dbContext.Tickets.FirstOrDefaultAsync(
+        item =>
+            item.TeamId == teamId
+            && item.ExternalSystemType == connection.ExternalSystemType
+            && item.ExternalId == externalRecordId,
+        cancellationToken);
+
+    var isNew = ticket is null;
+    if (!isNew && !request.ForceUpdate)
+    {
+        var conflictSession = await GetCurrentSessionAsync(httpContext, dbContext, cancellationToken);
+        await auditLogService.WriteAsync(
+            dbContext,
+            httpContext,
+            "integration.import_ticket",
+            "ticket",
+            ticket!.Id,
+            $"Ticket {ticket.Title} import conflicted from {connection.Name}.",
+            conflictSession?.UserId,
+            teamId,
+            "conflict",
+            cancellationToken);
+        return ConflictError(
+            "integration ticket already imported, use forceUpdate to sync",
+            "integration_ticket_already_imported");
+    }
+
+    if (ticket is null)
+    {
+        ticket = new Ticket
+        {
+            TeamId = teamId,
+            ProjectId = project.Id,
+            CustomerId = customer?.Id,
+            SourceType = RecordSourceType.External,
+            ExternalSystemType = connection.ExternalSystemType,
+            ExternalId = externalRecordId,
+            Status = TicketStatus.Pending,
+            Priority = TicketPriority.Medium,
+        };
+        dbContext.Tickets.Add(ticket);
+    }
+
+    ticket.ProjectId = project.Id;
+    ticket.CustomerId = customer?.Id ?? ticket.CustomerId;
+    ticket.Title = record.DisplayName.Trim();
+    ticket.Summary = string.IsNullOrWhiteSpace(record.Summary)
+        ? $"Imported from {connection.Name}"
+        : record.Summary.Trim();
+    ticket.LastActivityAt = DateTimeOffset.UtcNow;
+
+    await dbContext.SaveChangesAsync(cancellationToken);
+
+    var session = await GetCurrentSessionAsync(httpContext, dbContext, cancellationToken);
+    await auditLogService.WriteAsync(
+        dbContext,
+        httpContext,
+        "integration.import_ticket",
+        "ticket",
+        ticket.Id,
+        $"Ticket {ticket.Title} {(isNew ? "imported" : "synced")} from {connection.Name}.",
+        session?.UserId,
+        teamId,
+        "success",
+        cancellationToken);
+
+    var response = ToTicketResponse(ticket);
+    return isNew
+        ? Results.Created($"/api/teams/{teamId}/tickets/{ticket.Id}", response)
+        : Results.Ok(response);
+})
+.Produces<TicketResponse>(StatusCodes.Status200OK)
+.Produces<TicketResponse>(StatusCodes.Status201Created)
+.Produces<ApiErrorResponse>(StatusCodes.Status400BadRequest)
+.Produces<ApiErrorResponse>(StatusCodes.Status401Unauthorized)
+.Produces<ApiErrorResponse>(StatusCodes.Status403Forbidden)
+.Produces<ApiErrorResponse>(StatusCodes.Status404NotFound)
+.Produces<ApiErrorResponse>(StatusCodes.Status409Conflict)
+.WithName("ImportIntegrationTicket")
 .WithTags("Integrations");
 
 app.MapGet("/api/teams/{teamId:guid}/integrations/{connectionId:guid}/tasks", async (
@@ -3412,6 +4094,7 @@ app.MapPatch("/api/teams/{teamId:guid}/tickets/{ticketId:guid}", async (
     var previousAssignedMemberId = ticket.AssignedMemberId;
     var previousCategory = ticket.Category;
     var previousDueAt = ticket.DueAt;
+    var previousResolutionSummary = ticket.ResolutionSummary;
 
     ticket.Status = request.Status;
     ticket.Priority = request.Priority;
@@ -3419,6 +4102,12 @@ app.MapPatch("/api/teams/{teamId:guid}/tickets/{ticketId:guid}", async (
     ticket.AssignedMember = assignedMember;
     ticket.Category = string.IsNullOrWhiteSpace(request.Category) ? null : request.Category.Trim();
     ticket.DueAt = request.DueAt;
+    ticket.ResolutionSummary = string.IsNullOrWhiteSpace(request.ResolutionSummary)
+        ? null
+        : request.ResolutionSummary.Trim();
+    ticket.ResolvedAt = request.Status is TicketStatus.Completed or TicketStatus.Closed
+        ? ticket.ResolvedAt ?? DateTimeOffset.UtcNow
+        : null;
     ticket.LastActivityAt = DateTimeOffset.UtcNow;
 
     var activities = new List<TicketActivity>();
@@ -3469,6 +4158,16 @@ app.MapPatch("/api/teams/{teamId:guid}/tickets/{ticketId:guid}", async (
             session,
             TicketActivityType.Note,
             $"期望处理时间更新为 {(ticket.DueAt.HasValue ? ticket.DueAt.Value.ToString("yyyy-MM-dd HH:mm") : "未设置")}",
+            request.ActivityNote));
+    }
+
+    if (!string.Equals(previousResolutionSummary, ticket.ResolutionSummary, StringComparison.Ordinal))
+    {
+        activities.Add(CreateTicketActivity(
+            ticket,
+            session,
+            TicketActivityType.Note,
+            $"解决结果更新为 {ticket.ResolutionSummary ?? "未填写"}",
             request.ActivityNote));
     }
 
@@ -3764,11 +4463,10 @@ static async Task<UserSession?> GetCurrentSessionAsync(
         .Include(x => x.User)
         .FirstOrDefaultAsync(
             x => x.TokenHash == tokenHash
-                && x.RevokedAt == null
-                && x.ExpiresAt > DateTimeOffset.UtcNow,
+                && x.RevokedAt == null,
             cancellationToken);
 
-    if (session is null)
+    if (session is null || session.ExpiresAt <= DateTimeOffset.UtcNow)
     {
         return null;
     }
@@ -3876,8 +4574,11 @@ static async Task<int> CleanupExpiredSessionsAsync(
 {
     var now = DateTimeOffset.UtcNow;
     var expiredSessions = await dbContext.UserSessions
-        .Where(x => x.RevokedAt == null && x.ExpiresAt <= now)
+        .Where(x => x.RevokedAt == null)
         .ToListAsync(cancellationToken);
+    expiredSessions = expiredSessions
+        .Where(x => x.ExpiresAt <= now)
+        .ToList();
 
     if (expiredSessions.Count == 0)
     {
@@ -3901,8 +4602,11 @@ static async Task<int> ExpirePendingInvitationsAsync(
 {
     var now = DateTimeOffset.UtcNow;
     var invitations = await dbContext.TeamInvitations
-        .Where(x => x.Status == InvitationStatus.Pending && x.ExpiresAt <= now)
+        .Where(x => x.Status == InvitationStatus.Pending)
         .ToListAsync(cancellationToken);
+    invitations = invitations
+        .Where(x => x.ExpiresAt <= now)
+        .ToList();
 
     if (invitations.Count == 0)
     {
@@ -3997,47 +4701,141 @@ static bool IsStrongPassword(string? password) =>
     && password.Any(char.IsLower)
     && password.Any(char.IsDigit);
 
-static List<AiMemberTemplateResponse> GetDefaultAiMemberTemplates() =>
+static async Task EnsureDefaultAiMemberTemplatesAsync(
+    AppDbContext dbContext,
+    CancellationToken cancellationToken = default)
+{
+    var existingKeys = await dbContext.AiMemberTemplates
+        .Where(template => template.TeamId == null)
+        .Select(template => template.Key)
+        .ToListAsync(cancellationToken);
+
+    var existingKeySet = existingKeys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+    var missingTemplates = GetDefaultAiMemberTemplates()
+        .Where(template => !existingKeySet.Contains(template.Key))
+        .ToList();
+
+    if (missingTemplates.Count == 0)
+    {
+        return;
+    }
+
+    dbContext.AiMemberTemplates.AddRange(missingTemplates);
+    await dbContext.SaveChangesAsync(cancellationToken);
+}
+
+static AiMemberTemplateResponse ToAiMemberTemplateResponse(AiMemberTemplate template) =>
+    new(
+        template.Id,
+        template.Key,
+        template.Label,
+        template.DisplayName,
+        template.JobTitle,
+        template.ResponsibilitySummary,
+        template.Title,
+        template.PermissionBoundary,
+        template.SystemPrompt,
+        template.AllowedTools,
+        template.ExecutableActions,
+        template.KnowledgeScope,
+        template.IsAutonomous,
+        template.TeamId,
+        template.IsBuiltIn,
+        template.IsEnabled,
+        template.SortOrder);
+
+static string NormalizeAiMemberTemplateKey(string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        return string.Empty;
+    }
+
+    var normalized = Regex.Replace(value.Trim().ToLowerInvariant(), @"[^a-z0-9]+", "-");
+    normalized = Regex.Replace(normalized, @"-+", "-").Trim('-');
+    return normalized.Length <= 64 ? normalized : normalized[..64].Trim('-');
+}
+
+static async Task<string> GenerateAiMemberTemplateKeyAsync(
+    AppDbContext dbContext,
+    string seed,
+    CancellationToken cancellationToken)
+{
+    var baseKey = NormalizeAiMemberTemplateKey(seed);
+    if (string.IsNullOrWhiteSpace(baseKey))
+    {
+        baseKey = $"ai-template-{Guid.NewGuid():N}"[..24];
+    }
+
+    var candidate = baseKey;
+    var suffix = 2;
+    while (await dbContext.AiMemberTemplates.AnyAsync(template => template.Key == candidate, cancellationToken))
+    {
+        var suffixText = $"-{suffix}";
+        var prefixLength = Math.Min(baseKey.Length, 64 - suffixText.Length);
+        candidate = $"{baseKey[..prefixLength].Trim('-')}{suffixText}";
+        suffix += 1;
+    }
+
+    return candidate;
+}
+
+static List<AiMemberTemplate> GetDefaultAiMemberTemplates() =>
 [
-    new(
-        "front-desk",
-        "前台接待 AI",
-        "前台接待 AI",
-        "客户接待专员",
-        "负责首次接待客户、确认来意、收集联系方式，并把明确需求整理成后续动作。",
-        "Front Desk AI",
-        "只能处理接待、摘要整理和基础分流，不能直接承诺报价或交付日期。",
-        "你是团队的前台接待 AI，回答要清晰、礼貌、结构化，先收集完整信息再推进下一步。",
-        "knowledge.search, conversation.summary",
-        "接待客户,整理需求,推荐下一步,触发工单建议",
-        "project-docs,faqs",
-        false),
-    new(
-        "ticket-coordinator",
-        "工单协调 AI",
-        "工单协调 AI",
-        "工单协调专员",
-        "负责判断优先级、推荐负责人、推动工单进入正确状态。",
-        "Ticket Ops AI",
-        "可以更新工单状态和建议负责人，但不能关闭高优先级工单。",
-        "你是团队的工单协调 AI，要优先保证工单信息完整、负责人明确、状态准确。",
-        "ticket.list,ticket.update,team.member.lookup",
-        "工单分类,优先级评估,推荐负责人,更新状态",
-        "ticket-rules,team-members",
-        true),
-    new(
-        "project-assistant",
-        "项目助理 AI",
-        "项目助理 AI",
-        "项目助理",
-        "负责整理项目上下文、汇总会话和工单，帮助老板快速了解项目状态。",
-        "Project Assistant AI",
-        "只能总结和建议，不直接修改客户信息或对外发送承诺。",
-        "你是项目助理 AI，擅长总结、提炼风险、生成下一步建议。",
-        "project.list,ticket.list,conversation.list",
-        "总结进展,输出风险,整理待办,生成日报",
-        "project-docs,tickets,conversations",
-        false),
+    new()
+    {
+        Key = "front-desk",
+        Label = "前台接待 AI",
+        DisplayName = "前台接待 AI",
+        JobTitle = "客户接待专员",
+        ResponsibilitySummary = "负责首次接待客户、确认来意、收集联系方式，并把明确需求整理成后续动作。",
+        Title = "Front Desk AI",
+        PermissionBoundary = "只能处理接待、摘要整理和基础分流，不能直接承诺报价或交付日期。",
+        SystemPrompt = "你是团队的前台接待 AI，回答要清晰、礼貌、结构化，先收集完整信息再推进下一步。",
+        AllowedTools = "knowledge.search, conversation.summary",
+        ExecutableActions = "接待客户,整理需求,推荐下一步,触发工单建议",
+        KnowledgeScope = "project-docs,faqs",
+        IsAutonomous = false,
+        IsBuiltIn = true,
+        IsEnabled = true,
+        SortOrder = 100,
+    },
+    new()
+    {
+        Key = "ticket-coordinator",
+        Label = "工单协调 AI",
+        DisplayName = "工单协调 AI",
+        JobTitle = "工单协调专员",
+        ResponsibilitySummary = "负责判断优先级、推荐负责人、推动工单进入正确状态。",
+        Title = "Ticket Ops AI",
+        PermissionBoundary = "可以更新工单状态和建议负责人，但不能关闭高优先级工单。",
+        SystemPrompt = "你是团队的工单协调 AI，要优先保证工单信息完整、负责人明确、状态准确。",
+        AllowedTools = "ticket.list,ticket.update,team.member.lookup",
+        ExecutableActions = "工单分类,优先级评估,推荐负责人,更新状态",
+        KnowledgeScope = "ticket-rules,team-members",
+        IsAutonomous = true,
+        IsBuiltIn = true,
+        IsEnabled = true,
+        SortOrder = 200,
+    },
+    new()
+    {
+        Key = "project-assistant",
+        Label = "项目助理 AI",
+        DisplayName = "项目助理 AI",
+        JobTitle = "项目助理",
+        ResponsibilitySummary = "负责整理项目上下文、汇总会话和工单，帮助老板快速了解项目状态。",
+        Title = "Project Assistant AI",
+        PermissionBoundary = "只能总结和建议，不直接修改客户信息或对外发送承诺。",
+        SystemPrompt = "你是项目助理 AI，擅长总结、提炼风险、生成下一步建议。",
+        AllowedTools = "project.list,ticket.list,conversation.list",
+        ExecutableActions = "总结进展,输出风险,整理待办,生成日报",
+        KnowledgeScope = "project-docs,tickets,conversations",
+        IsAutonomous = false,
+        IsBuiltIn = true,
+        IsEnabled = true,
+        SortOrder = 300,
+    },
 ];
 
 static List<WorkflowTemplateResponse> GetDefaultWorkflowTemplates() =>
@@ -4121,6 +4919,10 @@ static ConciergeAppResponse ToConciergeAppResponse(ConciergeApp conciergeApp) =>
         conciergeApp.FaqScope,
         conciergeApp.BusinessHours,
         conciergeApp.ChannelLabel,
+        conciergeApp.IntakeGuidance,
+        conciergeApp.SuggestedPrompts,
+        conciergeApp.RequireEmail,
+        conciergeApp.RequirePhoneNumber,
         conciergeApp.Status,
         conciergeApp.PrimaryAiMemberId,
         conciergeApp.TicketCreationPolicy,
@@ -4172,6 +4974,8 @@ static TicketDetailResponse ToTicketDetailResponse(Ticket ticket) =>
         ticket.Status,
         ticket.Priority,
         ticket.DueAt,
+        ticket.ResolutionSummary,
+        ticket.ResolvedAt,
         ticket.LastActivityAt,
         ticket.AssignedMemberId,
         ticket.AssignedMember?.DisplayName,
@@ -4195,6 +4999,8 @@ static TicketResponse ToTicketResponse(Ticket ticket) =>
         ticket.Status,
         ticket.Priority,
         ticket.DueAt,
+        ticket.ResolutionSummary,
+        ticket.ResolvedAt,
         ticket.LastActivityAt,
         ticket.AssignedMemberId,
         ticket.AssignedMember?.DisplayName,
@@ -4227,8 +5033,12 @@ static AgentWorkflowResponse ToAgentWorkflowResponse(AgentWorkflowRun workflow) 
         workflow.ConversationId,
         workflow.TicketId,
         workflow.WorkflowType,
+        workflow.TriggerMode,
         workflow.Goal,
         workflow.Summary,
+        workflow.SummarySchemaVersion,
+        workflow.SummaryRawResponse,
+        ParseAiResponseAttempts(workflow.SummaryAttemptTrace),
         workflow.Status,
         workflow.RequestedByUserId,
         workflow.StartedByMemberId,
@@ -4248,6 +5058,9 @@ static AgentWorkflowResponse ToAgentWorkflowResponse(AgentWorkflowRun workflow) 
                 step.ActionType,
                 step.InputSummary,
                 step.OutputSummary,
+                step.OutputSchemaVersion,
+                step.OutputRawResponse,
+                ParseAiResponseAttempts(step.OutputAttemptTrace),
                 step.HandoffSummary,
                 step.Status,
                 step.ExecutedAt,
@@ -4267,6 +5080,24 @@ static AgentWorkflowResponse ToAgentWorkflowResponse(AgentWorkflowRun workflow) 
                         log.ExecutedAt))
                     .ToList()))
             .ToList());
+
+static IReadOnlyList<AiResponseAttemptResponse> ParseAiResponseAttempts(string? json)
+{
+    if (string.IsNullOrWhiteSpace(json))
+    {
+        return [];
+    }
+
+    try
+    {
+        var attempts = JsonSerializer.Deserialize<List<AiResponseAttemptResponse>>(json);
+        return attempts ?? [];
+    }
+    catch
+    {
+        return [];
+    }
+}
 
 static IntegrationConnectionResponse ToIntegrationConnectionResponse(IntegrationConnection connection) =>
     new(

@@ -69,6 +69,12 @@ export interface UpdateTicketRequest {
      * @type {string}
      * @memberof UpdateTicketRequest
      */
+    resolutionSummary?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof UpdateTicketRequest
+     */
     activityNote?: string | null;
 }
 
@@ -95,7 +101,8 @@ export function UpdateTicketRequestFromJSONTyped(json: any, ignoreDiscriminator:
         'priority': json['priority'] == null ? undefined : TicketPriorityFromJSON(json['priority']),
         'assignedMemberId': json['assignedMemberId'] == null ? undefined : json['assignedMemberId'],
         'category': json['category'] == null ? undefined : json['category'],
-        'dueAt': json['dueAt'] == null ? undefined : new Date(json['dueAt']),
+        'dueAt': json['dueAt'] == null ? undefined : (new Date(json['dueAt'])),
+        'resolutionSummary': json['resolutionSummary'] == null ? undefined : json['resolutionSummary'],
         'activityNote': json['activityNote'] == null ? undefined : json['activityNote'],
     };
 }
@@ -116,6 +123,8 @@ export function UpdateTicketRequestToJSONTyped(value?: UpdateTicketRequest | nul
         'assignedMemberId': value['assignedMemberId'],
         'category': value['category'],
         'dueAt': value['dueAt'] == null ? value['dueAt'] : value['dueAt'].toISOString(),
+        'resolutionSummary': value['resolutionSummary'],
         'activityNote': value['activityNote'],
     };
 }
+

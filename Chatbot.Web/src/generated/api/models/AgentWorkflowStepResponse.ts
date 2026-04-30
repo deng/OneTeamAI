@@ -27,6 +27,13 @@ import {
     AgentExecutionLogResponseToJSON,
     AgentExecutionLogResponseToJSONTyped,
 } from './AgentExecutionLogResponse';
+import type { AiResponseAttemptResponse } from './AiResponseAttemptResponse';
+import {
+    AiResponseAttemptResponseFromJSON,
+    AiResponseAttemptResponseFromJSONTyped,
+    AiResponseAttemptResponseToJSON,
+    AiResponseAttemptResponseToJSONTyped,
+} from './AiResponseAttemptResponse';
 
 /**
  * 
@@ -99,6 +106,24 @@ export interface AgentWorkflowStepResponse {
      * @type {string}
      * @memberof AgentWorkflowStepResponse
      */
+    outputSchemaVersion?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentWorkflowStepResponse
+     */
+    outputRawResponse?: string | null;
+    /**
+     * 
+     * @type {Array<AiResponseAttemptResponse>}
+     * @memberof AgentWorkflowStepResponse
+     */
+    outputAttempts?: Array<AiResponseAttemptResponse> | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentWorkflowStepResponse
+     */
     handoffSummary?: string | null;
     /**
      * 
@@ -149,6 +174,9 @@ export function AgentWorkflowStepResponseFromJSONTyped(json: any, ignoreDiscrimi
         'actionType': json['actionType'] == null ? undefined : json['actionType'],
         'inputSummary': json['inputSummary'] == null ? undefined : json['inputSummary'],
         'outputSummary': json['outputSummary'] == null ? undefined : json['outputSummary'],
+        'outputSchemaVersion': json['outputSchemaVersion'] == null ? undefined : json['outputSchemaVersion'],
+        'outputRawResponse': json['outputRawResponse'] == null ? undefined : json['outputRawResponse'],
+        'outputAttempts': json['outputAttempts'] == null ? undefined : ((json['outputAttempts'] as Array<any>).map(AiResponseAttemptResponseFromJSON)),
         'handoffSummary': json['handoffSummary'] == null ? undefined : json['handoffSummary'],
         'status': json['status'] == null ? undefined : AgentWorkflowStepStatusFromJSON(json['status']),
         'executedAt': json['executedAt'] == null ? undefined : (new Date(json['executedAt'])),
@@ -177,6 +205,9 @@ export function AgentWorkflowStepResponseToJSONTyped(value?: AgentWorkflowStepRe
         'actionType': value['actionType'],
         'inputSummary': value['inputSummary'],
         'outputSummary': value['outputSummary'],
+        'outputSchemaVersion': value['outputSchemaVersion'],
+        'outputRawResponse': value['outputRawResponse'],
+        'outputAttempts': value['outputAttempts'] == null ? undefined : ((value['outputAttempts'] as Array<any>).map(AiResponseAttemptResponseToJSON)),
         'handoffSummary': value['handoffSummary'],
         'status': AgentWorkflowStepStatusToJSON(value['status']),
         'executedAt': value['executedAt'] == null ? value['executedAt'] : value['executedAt'].toISOString(),

@@ -5,6 +5,7 @@ namespace Chatbot.Api.Models;
 public sealed record PublicConciergeIntakeRequest(
     string DisplayName,
     string? Email,
+    string? PhoneNumber,
     string? CompanyName,
     string Message,
     bool AutoCreateTicket = true,

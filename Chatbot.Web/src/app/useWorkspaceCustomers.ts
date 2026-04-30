@@ -55,6 +55,8 @@ export function useWorkspaceCustomers({
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [createCustomerForm, setCreateCustomerForm] = useState<CreateCustomerRequest>(emptyCreateCustomerForm);
   const [customerUpdateForm, setCustomerUpdateForm] = useState<UpdateCustomerRequest>(emptyUpdateCustomerForm);
+  const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+  const [customersError, setCustomersError] = useState<string | null>(null);
 
   const { customersApi } = useMemo(() => createWorkspaceApis(token), [token]);
   const selectedCustomer = customers.find(customer => customer.id === selectedCustomerId) ?? null;
@@ -68,25 +70,35 @@ export function useWorkspaceCustomers({
 
     let cancelled = false;
 
+    setIsCustomersLoading(true);
+    setCustomersError(null);
+
     void (async () => {
-      const nextCustomers = await customersApi.listCustomers({ teamId: currentTeamId });
+      try {
+        const nextCustomers = await customersApi.listCustomers({ teamId: currentTeamId });
 
-      if (cancelled) {
-        return;
-      }
+        if (cancelled) {
+          return;
+        }
 
-      setCustomers(nextCustomers);
-      setSelectedCustomerId(current =>
-        nextCustomers.some(customer => customer.id === current) ? current : (nextCustomers[0]?.id ?? ''),
-      );
-    })().catch(error => {
-      if (!cancelled) {
-        setFeedback({
-          kind: 'error',
-          text: error instanceof Error ? error.message : '客户数据加载失败。',
-        });
+        setCustomers(nextCustomers);
+        setSelectedCustomerId(current =>
+          nextCustomers.some(customer => customer.id === current) ? current : (nextCustomers[0]?.id ?? ''),
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setCustomersError(error instanceof Error ? error.message : '客户数据加载失败。');
+          setFeedback({
+            kind: 'error',
+            text: error instanceof Error ? error.message : '客户数据加载失败。',
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setIsCustomersLoading(false);
+        }
       }
-    });
+    })();
 
     return () => {
       cancelled = true;
@@ -178,6 +190,9 @@ export function useWorkspaceCustomers({
     createCustomerForm,
     customerUpdateForm,
     customers,
+    isCustomersLoading,
+    customersError,
+    refreshCustomers,
     selectedCustomer,
     selectedCustomerId,
     setCreateCustomerForm,

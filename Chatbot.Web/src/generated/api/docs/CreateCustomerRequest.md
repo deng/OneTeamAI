@@ -11,6 +11,10 @@ Name | Type
 `phoneNumber` | string
 `companyName` | string
 `sourceLabel` | string
+`tags` | string
+`followUpStatus` | [CustomerFollowUpStatus](CustomerFollowUpStatus.md)
+`lastContactedAt` | Date
+`projectId` | string
 `notes` | string
 
 ## Example
@@ -25,6 +29,10 @@ const example = {
   "phoneNumber": null,
   "companyName": null,
   "sourceLabel": null,
+  "tags": null,
+  "followUpStatus": null,
+  "lastContactedAt": null,
+  "projectId": null,
   "notes": null,
 } satisfies CreateCustomerRequest
 

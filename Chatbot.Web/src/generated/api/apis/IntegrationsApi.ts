@@ -17,29 +17,65 @@ import * as runtime from '../runtime';
 import type {
   ApiErrorResponse,
   CreateIntegrationConnectionRequest,
+  CustomerResponse,
   FileKnowledgeItemResponse,
+  ImportIntegrationCustomerRequest,
+  ImportIntegrationProjectRequest,
+  ImportIntegrationTicketRequest,
   IntegrationConnectionHealthResponse,
   IntegrationConnectionResponse,
   IntegrationPreviewItemResponse,
+  ProjectResponse,
+  TicketResponse,
 } from '../models/index';
 import {
     ApiErrorResponseFromJSON,
     ApiErrorResponseToJSON,
     CreateIntegrationConnectionRequestFromJSON,
     CreateIntegrationConnectionRequestToJSON,
+    CustomerResponseFromJSON,
+    CustomerResponseToJSON,
     FileKnowledgeItemResponseFromJSON,
     FileKnowledgeItemResponseToJSON,
+    ImportIntegrationCustomerRequestFromJSON,
+    ImportIntegrationCustomerRequestToJSON,
+    ImportIntegrationProjectRequestFromJSON,
+    ImportIntegrationProjectRequestToJSON,
+    ImportIntegrationTicketRequestFromJSON,
+    ImportIntegrationTicketRequestToJSON,
     IntegrationConnectionHealthResponseFromJSON,
     IntegrationConnectionHealthResponseToJSON,
     IntegrationConnectionResponseFromJSON,
     IntegrationConnectionResponseToJSON,
     IntegrationPreviewItemResponseFromJSON,
     IntegrationPreviewItemResponseToJSON,
+    ProjectResponseFromJSON,
+    ProjectResponseToJSON,
+    TicketResponseFromJSON,
+    TicketResponseToJSON,
 } from '../models/index';
 
 export interface CreateIntegrationConnectionOperationRequest {
     teamId: string;
     createIntegrationConnectionRequest: CreateIntegrationConnectionRequest;
+}
+
+export interface ImportIntegrationCustomerOperationRequest {
+    teamId: string;
+    connectionId: string;
+    importIntegrationCustomerRequest: ImportIntegrationCustomerRequest;
+}
+
+export interface ImportIntegrationProjectOperationRequest {
+    teamId: string;
+    connectionId: string;
+    importIntegrationProjectRequest: ImportIntegrationProjectRequest;
+}
+
+export interface ImportIntegrationTicketOperationRequest {
+    teamId: string;
+    connectionId: string;
+    importIntegrationTicketRequest: ImportIntegrationTicketRequest;
 }
 
 export interface ListIntegrationConnectionsRequest {
@@ -140,6 +176,213 @@ export class IntegrationsApi extends runtime.BaseAPI {
      */
     async createIntegrationConnection(requestParameters: CreateIntegrationConnectionOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<IntegrationConnectionResponse> {
         const response = await this.createIntegrationConnectionRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for importIntegrationCustomer without sending the request
+     */
+    async importIntegrationCustomerRequestOpts(requestParameters: ImportIntegrationCustomerOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling importIntegrationCustomer().'
+            );
+        }
+
+        if (requestParameters['connectionId'] == null) {
+            throw new runtime.RequiredError(
+                'connectionId',
+                'Required parameter "connectionId" was null or undefined when calling importIntegrationCustomer().'
+            );
+        }
+
+        if (requestParameters['importIntegrationCustomerRequest'] == null) {
+            throw new runtime.RequiredError(
+                'importIntegrationCustomerRequest',
+                'Required parameter "importIntegrationCustomerRequest" was null or undefined when calling importIntegrationCustomer().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/integrations/{connectionId}/customers/import`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"connectionId"}}`, encodeURIComponent(String(requestParameters['connectionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ImportIntegrationCustomerRequestToJSON(requestParameters['importIntegrationCustomerRequest']),
+        };
+    }
+
+    /**
+     */
+    async importIntegrationCustomerRaw(requestParameters: ImportIntegrationCustomerOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<CustomerResponse>> {
+        const requestOptions = await this.importIntegrationCustomerRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => CustomerResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async importIntegrationCustomer(requestParameters: ImportIntegrationCustomerOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<CustomerResponse> {
+        const response = await this.importIntegrationCustomerRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for importIntegrationProject without sending the request
+     */
+    async importIntegrationProjectRequestOpts(requestParameters: ImportIntegrationProjectOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling importIntegrationProject().'
+            );
+        }
+
+        if (requestParameters['connectionId'] == null) {
+            throw new runtime.RequiredError(
+                'connectionId',
+                'Required parameter "connectionId" was null or undefined when calling importIntegrationProject().'
+            );
+        }
+
+        if (requestParameters['importIntegrationProjectRequest'] == null) {
+            throw new runtime.RequiredError(
+                'importIntegrationProjectRequest',
+                'Required parameter "importIntegrationProjectRequest" was null or undefined when calling importIntegrationProject().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/integrations/{connectionId}/projects/import`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"connectionId"}}`, encodeURIComponent(String(requestParameters['connectionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ImportIntegrationProjectRequestToJSON(requestParameters['importIntegrationProjectRequest']),
+        };
+    }
+
+    /**
+     */
+    async importIntegrationProjectRaw(requestParameters: ImportIntegrationProjectOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ProjectResponse>> {
+        const requestOptions = await this.importIntegrationProjectRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => ProjectResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async importIntegrationProject(requestParameters: ImportIntegrationProjectOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ProjectResponse> {
+        const response = await this.importIntegrationProjectRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for importIntegrationTicket without sending the request
+     */
+    async importIntegrationTicketRequestOpts(requestParameters: ImportIntegrationTicketOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling importIntegrationTicket().'
+            );
+        }
+
+        if (requestParameters['connectionId'] == null) {
+            throw new runtime.RequiredError(
+                'connectionId',
+                'Required parameter "connectionId" was null or undefined when calling importIntegrationTicket().'
+            );
+        }
+
+        if (requestParameters['importIntegrationTicketRequest'] == null) {
+            throw new runtime.RequiredError(
+                'importIntegrationTicketRequest',
+                'Required parameter "importIntegrationTicketRequest" was null or undefined when calling importIntegrationTicket().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/integrations/{connectionId}/tickets/import`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"connectionId"}}`, encodeURIComponent(String(requestParameters['connectionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: ImportIntegrationTicketRequestToJSON(requestParameters['importIntegrationTicketRequest']),
+        };
+    }
+
+    /**
+     */
+    async importIntegrationTicketRaw(requestParameters: ImportIntegrationTicketOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TicketResponse>> {
+        const requestOptions = await this.importIntegrationTicketRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TicketResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async importIntegrationTicket(requestParameters: ImportIntegrationTicketOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TicketResponse> {
+        const response = await this.importIntegrationTicketRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
