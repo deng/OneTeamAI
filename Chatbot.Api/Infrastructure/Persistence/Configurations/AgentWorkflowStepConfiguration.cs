@@ -15,6 +15,7 @@ public class AgentWorkflowStepConfiguration : IEntityTypeConfiguration<AgentWork
         builder.Property(x => x.ActionType).IsRequired();
         builder.Property(x => x.InputSummary).IsRequired();
         builder.Property(x => x.OutputSummary).IsRequired();
+        builder.Property(x => x.OutputSchemaVersion).HasMaxLength(64);
         builder.Property(x => x.HandoffSummary).IsRequired();
 
         builder.HasOne(x => x.Member)

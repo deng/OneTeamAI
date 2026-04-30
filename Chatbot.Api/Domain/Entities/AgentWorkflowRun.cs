@@ -39,6 +39,15 @@ public class AgentWorkflowRun : EntityBase
     [MaxLength(2048)]
     public string Summary { get; set; } = string.Empty;
 
+    [MaxLength(64)]
+    public string? SummarySchemaVersion { get; set; }
+
+    public string? SummaryRawResponse { get; set; }
+
+    public string? SummaryAttemptTrace { get; set; }
+
+    public AgentWorkflowTriggerMode TriggerMode { get; set; } = AgentWorkflowTriggerMode.Manual;
+
     public AgentWorkflowStatus Status { get; set; } = AgentWorkflowStatus.Planned;
 
     public DateTimeOffset? CompletedAt { get; set; }

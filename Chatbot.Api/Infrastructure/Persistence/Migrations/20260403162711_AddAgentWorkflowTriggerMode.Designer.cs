@@ -3,6 +3,7 @@ using System;
 using Chatbot.Api.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Chatbot.Api.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260403162711_AddAgentWorkflowTriggerMode")]
+    partial class AddAgentWorkflowTriggerMode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
@@ -171,16 +174,6 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                         .HasMaxLength(2048)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("SummaryAttemptTrace")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SummaryRawResponse")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("SummarySchemaVersion")
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
-
                     b.Property<Guid>("TeamId")
                         .HasColumnType("TEXT");
 
@@ -250,16 +243,6 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("MemberId")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("OutputAttemptTrace")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OutputRawResponse")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("OutputSchemaVersion")
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("OutputSummary")
                         .IsRequired()
                         .HasMaxLength(2048)
@@ -287,92 +270,6 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("agent_workflow_steps", (string)null);
-                });
-
-            modelBuilder.Entity("Chatbot.Api.Domain.Entities.AiMemberTemplate", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AllowedTools")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ExecutableActions")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsAutonomous")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsBuiltIn")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsEnabled")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("JobTitle")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("KnowledgeScope")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Label")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PermissionBoundary")
-                        .HasMaxLength(1024)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ResponsibilitySummary")
-                        .IsRequired()
-                        .HasMaxLength(2048)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("SortOrder")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
-
-                    b.Property<string>("SystemPrompt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid?>("TeamId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Title")
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Key")
-                        .IsUnique();
-
-                    b.HasIndex("TeamId", "IsEnabled", "SortOrder");
-
-                    b.ToTable("ai_member_templates", (string)null);
                 });
 
             modelBuilder.Entity("Chatbot.Api.Domain.Entities.AuditLog", b =>
@@ -1284,16 +1181,6 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
                     b.Navigation("WorkflowRun");
                 });
 
-            modelBuilder.Entity("Chatbot.Api.Domain.Entities.AiMemberTemplate", b =>
-                {
-                    b.HasOne("Chatbot.Api.Domain.Entities.Team", "Team")
-                        .WithMany("AiMemberTemplates")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Team");
-                });
-
             modelBuilder.Entity("Chatbot.Api.Domain.Entities.AuditLog", b =>
                 {
                     b.HasOne("Chatbot.Api.Domain.Entities.Team", "Team")
@@ -1642,8 +1529,6 @@ namespace Chatbot.Api.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Chatbot.Api.Domain.Entities.Team", b =>
                 {
-                    b.Navigation("AiMemberTemplates");
-
                     b.Navigation("ConciergeApps");
 
                     b.Navigation("IntegrationConnections");
