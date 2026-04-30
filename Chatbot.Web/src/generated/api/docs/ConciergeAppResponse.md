@@ -12,6 +12,14 @@ Name | Type
 `name` | string
 `description` | string
 `serviceScope` | string
+`welcomeMessage` | string
+`faqScope` | string
+`businessHours` | string
+`channelLabel` | string
+`intakeGuidance` | string
+`suggestedPrompts` | string
+`requireEmail` | boolean
+`requirePhoneNumber` | boolean
 `status` | [ConciergeAppStatus](ConciergeAppStatus.md)
 `primaryAiMemberId` | string
 `ticketCreationPolicy` | string
@@ -30,6 +38,14 @@ const example = {
   "name": null,
   "description": null,
   "serviceScope": null,
+  "welcomeMessage": null,
+  "faqScope": null,
+  "businessHours": null,
+  "channelLabel": null,
+  "intakeGuidance": null,
+  "suggestedPrompts": null,
+  "requireEmail": null,
+  "requirePhoneNumber": null,
   "status": null,
   "primaryAiMemberId": null,
   "ticketCreationPolicy": null,

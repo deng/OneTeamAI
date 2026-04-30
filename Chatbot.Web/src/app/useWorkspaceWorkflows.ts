@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { AgentWorkflowResponse, MemberResponse, RunTicketWorkflowRequest } from '../generated/api';
+import {
+  AgentWorkflowTriggerMode,
+  type AgentWorkflowResponse,
+  type MemberResponse,
+  type RunTicketWorkflowRequest,
+} from '../generated/api';
 import type { WorkflowTemplateItem } from './types';
 import { createWorkspaceApis, fetchJson, getErrorMessage } from './workspaceApi';
 
@@ -11,6 +16,7 @@ function emptyWorkflowForm(): RunTicketWorkflowRequest {
   return {
     goal: '',
     startedByMemberId: '',
+    triggerMode: AgentWorkflowTriggerMode.NUMBER_0,
   };
 }
 

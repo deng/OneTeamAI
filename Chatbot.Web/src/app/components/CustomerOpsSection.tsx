@@ -22,6 +22,8 @@ import { WorkflowPanel } from './WorkflowPanel';
 import type { WorkflowTemplateItem } from '../types';
 
 type CustomerOpsSectionProps = {
+  autoRunConversationWorkflow: boolean;
+  autoRunTicketWorkflow: boolean;
   busyAction: string | null;
   canManage: boolean;
   conversationDetail: ConversationDetailResponse | null;
@@ -56,6 +58,8 @@ type CustomerOpsSectionProps = {
   workflowScope: 'ticket' | 'conversation' | null;
   workflowScopeLabel: string;
   onAddTicketComment: () => void;
+  onAutoRunConversationWorkflowChange: (value: boolean) => void;
+  onAutoRunTicketWorkflowChange: (value: boolean) => void;
   onCreateConversation: () => void;
   onCreateConversationFormChange: Dispatch<SetStateAction<CreateConversationRequest>>;
   onCreateCustomer: () => void;
@@ -78,6 +82,8 @@ type CustomerOpsSectionProps = {
 };
 
 export function CustomerOpsSection({
+  autoRunConversationWorkflow,
+  autoRunTicketWorkflow,
   busyAction,
   canManage,
   conversationDetail,
@@ -112,6 +118,8 @@ export function CustomerOpsSection({
   workflowScope,
   workflowScopeLabel,
   onAddTicketComment,
+  onAutoRunConversationWorkflowChange,
+  onAutoRunTicketWorkflowChange,
   onCreateConversation,
   onCreateConversationFormChange,
   onCreateCustomer,
@@ -156,6 +164,7 @@ export function CustomerOpsSection({
       />
 
       <ConversationSection
+        autoRunConversationWorkflow={autoRunConversationWorkflow}
         busyAction={busyAction}
         canManageConversations={canManage}
         conversationDetail={conversationDetail}
@@ -169,6 +178,7 @@ export function CustomerOpsSection({
         selectedCustomer={selectedCustomer}
         onCreateConversation={onCreateConversation}
         onCreateConversationFormChange={onCreateConversationFormChange}
+        onAutoRunConversationWorkflowChange={onAutoRunConversationWorkflowChange}
         onRunConversationWorkflow={onRunConversationWorkflow}
         onSelectConversationId={onSelectConversationId}
         onSelectRelatedConciergeAppId={onSelectConciergeAppId}
@@ -177,6 +187,7 @@ export function CustomerOpsSection({
       />
 
       <TicketSection
+        autoRunTicketWorkflow={autoRunTicketWorkflow}
         busyAction={busyAction}
         canManageTickets={canManage}
         createTicketForm={createTicketForm}
@@ -192,6 +203,7 @@ export function CustomerOpsSection({
         ticketDetailError={ticketDetailError}
         ticketUpdateDrafts={ticketUpdateDrafts}
         onAddComment={onAddTicketComment}
+        onAutoRunTicketWorkflowChange={onAutoRunTicketWorkflowChange}
         onCreateTicket={onCreateTicket}
         onCreateTicketFormChange={onCreateTicketFormChange}
         onSaveTicket={onSaveTicket}

@@ -16,6 +16,9 @@ Name | Type
 `actionType` | string
 `inputSummary` | string
 `outputSummary` | string
+`outputSchemaVersion` | string
+`outputRawResponse` | string
+`outputAttempts` | [Array&lt;AiResponseAttemptResponse&gt;](AiResponseAttemptResponse.md)
 `handoffSummary` | string
 `status` | [AgentWorkflowStepStatus](AgentWorkflowStepStatus.md)
 `executedAt` | Date
@@ -38,6 +41,9 @@ const example = {
   "actionType": null,
   "inputSummary": null,
   "outputSummary": null,
+  "outputSchemaVersion": null,
+  "outputRawResponse": null,
+  "outputAttempts": null,
   "handoffSummary": null,
   "status": null,
   "executedAt": null,

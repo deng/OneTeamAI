@@ -1,4 +1,4 @@
-import type { CreateAiMemberRequest } from '../generated/api';
+import type { AiMemberTemplateItem } from './types';
 
 export const starterPrompts = [
   '帮我总结今天的项目进展',
@@ -6,7 +6,7 @@ export const starterPrompts = [
   '解释一下 Microsoft Agent Framework 的作用',
 ];
 
-export const aiRoleTemplates: ReadonlyArray<CreateAiMemberRequest & { key: string; label: string }> = [
+export const aiRoleTemplates: ReadonlyArray<AiMemberTemplateItem> = [
   {
     key: 'front-desk',
     label: '前台接待 AI',

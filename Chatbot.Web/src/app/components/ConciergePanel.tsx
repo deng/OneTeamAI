@@ -110,6 +110,12 @@ export function ConciergePanel({
                     <span>服务范围：{formatNullableText(appEntity.serviceScope)}</span>
                     <span>欢迎语：{formatNullableText(appEntity.welcomeMessage)}</span>
                     <span>FAQ 范围：{formatNullableText(appEntity.faqScope)}</span>
+                    <span>填写指引：{formatNullableText(appEntity.intakeGuidance)}</span>
+                    <span>建议提问：{formatNullableText(appEntity.suggestedPrompts)}</span>
+                    <span>
+                      资料要求：邮箱 {appEntity.requireEmail ? '必填' : '选填'} · 手机{' '}
+                      {appEntity.requirePhoneNumber ? '必填' : '选填'}
+                    </span>
                     <span>自动建单：{formatNullableText(appEntity.ticketCreationPolicy)}</span>
                     <span>转人工：{formatNullableText(appEntity.humanHandoffPolicy)}</span>
                   </button>
@@ -238,6 +244,36 @@ export function ConciergePanel({
               />
             </label>
             <label className="field">
+              <span>填写指引</span>
+              <textarea
+                className="text-area"
+                rows={2}
+                disabled={busyAction !== null}
+                value={conciergeUpdateForm.intakeGuidance ?? ''}
+                onChange={event =>
+                  onConciergeUpdateFormChange(current => ({
+                    ...current,
+                    intakeGuidance: event.currentTarget.value,
+                  }))
+                }
+              />
+            </label>
+            <label className="field">
+              <span>建议提问</span>
+              <textarea
+                className="text-area"
+                rows={2}
+                disabled={busyAction !== null}
+                value={conciergeUpdateForm.suggestedPrompts ?? ''}
+                onChange={event =>
+                  onConciergeUpdateFormChange(current => ({
+                    ...current,
+                    suggestedPrompts: event.currentTarget.value,
+                  }))
+                }
+              />
+            </label>
+            <label className="field">
               <span>服务范围</span>
               <textarea
                 className="text-area"
@@ -251,6 +287,32 @@ export function ConciergePanel({
                   }))
                 }
               />
+            </label>
+            <label className="checkbox-field">
+              <input
+                checked={conciergeUpdateForm.requireEmail ?? false}
+                type="checkbox"
+                onChange={event =>
+                  onConciergeUpdateFormChange(current => ({
+                    ...current,
+                    requireEmail: event.currentTarget.checked,
+                  }))
+                }
+              />
+              要求客户填写邮箱
+            </label>
+            <label className="checkbox-field">
+              <input
+                checked={conciergeUpdateForm.requirePhoneNumber ?? false}
+                type="checkbox"
+                onChange={event =>
+                  onConciergeUpdateFormChange(current => ({
+                    ...current,
+                    requirePhoneNumber: event.currentTarget.checked,
+                  }))
+                }
+              />
+              要求客户填写手机号
             </label>
             <label className="field">
               <span>自动建单策略</span>
@@ -390,6 +452,14 @@ export function ConciergePanel({
                 <span>{formatNullableText(selectedConciergeApp.faqScope)}</span>
               </div>
               <div className="entity-chip">
+                <strong>填写指引</strong>
+                <span>{formatNullableText(selectedConciergeApp.intakeGuidance)}</span>
+              </div>
+              <div className="entity-chip">
+                <strong>建议提问</strong>
+                <span>{formatNullableText(selectedConciergeApp.suggestedPrompts)}</span>
+              </div>
+              <div className="entity-chip">
                 <strong>自动建单规则</strong>
                 <span>{formatNullableText(selectedConciergeApp.ticketCreationPolicy)}</span>
               </div>
@@ -409,6 +479,10 @@ export function ConciergePanel({
               </span>
               <span>
                 客户：{relatedCustomers.length} · 会话：{relatedConversations.length} · 工单：{relatedTickets.length}
+              </span>
+              <span>
+                资料要求：邮箱 {selectedConciergeApp.requireEmail ? '必填' : '选填'} · 手机{' '}
+                {selectedConciergeApp.requirePhoneNumber ? '必填' : '选填'}
               </span>
             </div>
             {selectedConciergeApp.projectId ? (

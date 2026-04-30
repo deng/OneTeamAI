@@ -10,8 +10,16 @@ Name | Type
 `teamId` | string
 `name` | string
 `description` | string
+`stageLabel` | string
+`summary` | string
+`riskSummary` | string
+`nextSteps` | string
 `status` | [ProjectStatus](ProjectStatus.md)
 `leadMemberId` | string
+`participantMemberIds` | Array&lt;string&gt;
+`participantCount` | number
+`ticketCount` | number
+`customerCount` | number
 `sourceType` | [RecordSourceType](RecordSourceType.md)
 `externalSystemType` | [ExternalSystemType](ExternalSystemType.md)
 `externalId` | string
@@ -27,8 +35,16 @@ const example = {
   "teamId": null,
   "name": null,
   "description": null,
+  "stageLabel": null,
+  "summary": null,
+  "riskSummary": null,
+  "nextSteps": null,
   "status": null,
   "leadMemberId": null,
+  "participantMemberIds": null,
+  "participantCount": null,
+  "ticketCount": null,
+  "customerCount": null,
   "sourceType": null,
   "externalSystemType": null,
   "externalId": null,

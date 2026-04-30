@@ -89,6 +89,30 @@ export interface ConciergeAppResponse {
     channelLabel?: string | null;
     /**
      * 
+     * @type {string}
+     * @memberof ConciergeAppResponse
+     */
+    intakeGuidance?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ConciergeAppResponse
+     */
+    suggestedPrompts?: string | null;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ConciergeAppResponse
+     */
+    requireEmail?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ConciergeAppResponse
+     */
+    requirePhoneNumber?: boolean;
+    /**
+     * 
      * @type {ConciergeAppStatus}
      * @memberof ConciergeAppResponse
      */
@@ -142,6 +166,10 @@ export function ConciergeAppResponseFromJSONTyped(json: any, ignoreDiscriminator
         'faqScope': json['faqScope'] == null ? undefined : json['faqScope'],
         'businessHours': json['businessHours'] == null ? undefined : json['businessHours'],
         'channelLabel': json['channelLabel'] == null ? undefined : json['channelLabel'],
+        'intakeGuidance': json['intakeGuidance'] == null ? undefined : json['intakeGuidance'],
+        'suggestedPrompts': json['suggestedPrompts'] == null ? undefined : json['suggestedPrompts'],
+        'requireEmail': json['requireEmail'] == null ? undefined : json['requireEmail'],
+        'requirePhoneNumber': json['requirePhoneNumber'] == null ? undefined : json['requirePhoneNumber'],
         'status': json['status'] == null ? undefined : ConciergeAppStatusFromJSON(json['status']),
         'primaryAiMemberId': json['primaryAiMemberId'] == null ? undefined : json['primaryAiMemberId'],
         'ticketCreationPolicy': json['ticketCreationPolicy'] == null ? undefined : json['ticketCreationPolicy'],
@@ -170,9 +198,14 @@ export function ConciergeAppResponseToJSONTyped(value?: ConciergeAppResponse | n
         'faqScope': value['faqScope'],
         'businessHours': value['businessHours'],
         'channelLabel': value['channelLabel'],
+        'intakeGuidance': value['intakeGuidance'],
+        'suggestedPrompts': value['suggestedPrompts'],
+        'requireEmail': value['requireEmail'],
+        'requirePhoneNumber': value['requirePhoneNumber'],
         'status': ConciergeAppStatusToJSON(value['status']),
         'primaryAiMemberId': value['primaryAiMemberId'],
         'ticketCreationPolicy': value['ticketCreationPolicy'],
         'humanHandoffPolicy': value['humanHandoffPolicy'],
     };
 }
+

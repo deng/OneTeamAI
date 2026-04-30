@@ -5,6 +5,9 @@ All URIs are relative to *http://localhost*
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
 | [**createIntegrationConnection**](IntegrationsApi.md#createintegrationconnectionoperation) | **POST** /api/teams/{teamId}/integrations |  |
+| [**importIntegrationCustomer**](IntegrationsApi.md#importintegrationcustomeroperation) | **POST** /api/teams/{teamId}/integrations/{connectionId}/customers/import |  |
+| [**importIntegrationProject**](IntegrationsApi.md#importintegrationprojectoperation) | **POST** /api/teams/{teamId}/integrations/{connectionId}/projects/import |  |
+| [**importIntegrationTicket**](IntegrationsApi.md#importintegrationticketoperation) | **POST** /api/teams/{teamId}/integrations/{connectionId}/tickets/import |  |
 | [**listIntegrationConnections**](IntegrationsApi.md#listintegrationconnections) | **GET** /api/teams/{teamId}/integrations |  |
 | [**previewIntegrationCustomers**](IntegrationsApi.md#previewintegrationcustomers) | **GET** /api/teams/{teamId}/integrations/{connectionId}/customers |  |
 | [**previewIntegrationFiles**](IntegrationsApi.md#previewintegrationfiles) | **GET** /api/teams/{teamId}/integrations/{connectionId}/files |  |
@@ -82,6 +85,249 @@ example().catch(console.error);
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
+| **201** | Created |  -  |
+| **400** | Bad Request |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Not Found |  -  |
+| **409** | Conflict |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## importIntegrationCustomer
+
+> CustomerResponse importIntegrationCustomer(teamId, connectionId, importIntegrationCustomerRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  IntegrationsApi,
+} from '';
+import type { ImportIntegrationCustomerOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: Bearer
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new IntegrationsApi(config);
+
+  const body = {
+    // string
+    teamId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // string
+    connectionId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // ImportIntegrationCustomerRequest
+    importIntegrationCustomerRequest: ...,
+  } satisfies ImportIntegrationCustomerOperationRequest;
+
+  try {
+    const data = await api.importIntegrationCustomer(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **teamId** | `string` |  | [Defaults to `undefined`] |
+| **connectionId** | `string` |  | [Defaults to `undefined`] |
+| **importIntegrationCustomerRequest** | [ImportIntegrationCustomerRequest](ImportIntegrationCustomerRequest.md) |  | |
+
+### Return type
+
+[**CustomerResponse**](CustomerResponse.md)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+| **201** | Created |  -  |
+| **400** | Bad Request |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Not Found |  -  |
+| **409** | Conflict |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## importIntegrationProject
+
+> ProjectResponse importIntegrationProject(teamId, connectionId, importIntegrationProjectRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  IntegrationsApi,
+} from '';
+import type { ImportIntegrationProjectOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: Bearer
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new IntegrationsApi(config);
+
+  const body = {
+    // string
+    teamId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // string
+    connectionId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // ImportIntegrationProjectRequest
+    importIntegrationProjectRequest: ...,
+  } satisfies ImportIntegrationProjectOperationRequest;
+
+  try {
+    const data = await api.importIntegrationProject(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **teamId** | `string` |  | [Defaults to `undefined`] |
+| **connectionId** | `string` |  | [Defaults to `undefined`] |
+| **importIntegrationProjectRequest** | [ImportIntegrationProjectRequest](ImportIntegrationProjectRequest.md) |  | |
+
+### Return type
+
+[**ProjectResponse**](ProjectResponse.md)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
+| **201** | Created |  -  |
+| **400** | Bad Request |  -  |
+| **401** | Unauthorized |  -  |
+| **403** | Forbidden |  -  |
+| **404** | Not Found |  -  |
+| **409** | Conflict |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
+
+
+## importIntegrationTicket
+
+> TicketResponse importIntegrationTicket(teamId, connectionId, importIntegrationTicketRequest)
+
+
+
+### Example
+
+```ts
+import {
+  Configuration,
+  IntegrationsApi,
+} from '';
+import type { ImportIntegrationTicketOperationRequest } from '';
+
+async function example() {
+  console.log("🚀 Testing  SDK...");
+  const config = new Configuration({ 
+    // Configure HTTP bearer authorization: Bearer
+    accessToken: "YOUR BEARER TOKEN",
+  });
+  const api = new IntegrationsApi(config);
+
+  const body = {
+    // string
+    teamId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // string
+    connectionId: 38400000-8cf0-11bd-b23e-10b96e4ef00d,
+    // ImportIntegrationTicketRequest
+    importIntegrationTicketRequest: ...,
+  } satisfies ImportIntegrationTicketOperationRequest;
+
+  try {
+    const data = await api.importIntegrationTicket(body);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+// Run the test
+example().catch(console.error);
+```
+
+### Parameters
+
+
+| Name | Type | Description  | Notes |
+|------------- | ------------- | ------------- | -------------|
+| **teamId** | `string` |  | [Defaults to `undefined`] |
+| **connectionId** | `string` |  | [Defaults to `undefined`] |
+| **importIntegrationTicketRequest** | [ImportIntegrationTicketRequest](ImportIntegrationTicketRequest.md) |  | |
+
+### Return type
+
+[**TicketResponse**](TicketResponse.md)
+
+### Authorization
+
+[Bearer](../README.md#Bearer)
+
+### HTTP request headers
+
+- **Content-Type**: `application/json`
+- **Accept**: `application/json`
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+| **200** | OK |  -  |
 | **201** | Created |  -  |
 | **400** | Bad Request |  -  |
 | **401** | Unauthorized |  -  |

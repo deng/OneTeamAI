@@ -178,6 +178,7 @@ export function useWorkspaceCustomers({
     createCustomerForm,
     customerUpdateForm,
     customers,
+    refreshCustomers,
     selectedCustomer,
     selectedCustomerId,
     setCreateCustomerForm,

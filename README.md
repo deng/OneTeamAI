@@ -121,10 +121,16 @@ chmod +x stop-dev.sh
 示例：
 
 ```bash
-openapi-generator-cli generate \
-  -i http://127.0.0.1:5078/swagger/v1/swagger.json \
-  -g typescript-fetch \
-  -o Chatbot.Web/src/generated/api
+npm --prefix Chatbot.Web run generate:api
+```
+
+默认会抓取 `http://127.0.0.1:5078/swagger/v1/swagger.json`，并生成到 `Chatbot.Web/src/generated/api`。
+
+也支持自定义来源：
+
+```bash
+npm --prefix Chatbot.Web run generate:api -- http://127.0.0.1:5078/swagger/v1/swagger.json
+npm --prefix Chatbot.Web run generate:api -- /absolute/path/to/swagger.json
 ```
 
 这样前端可以直接复用后端接口定义、请求模型和响应类型。

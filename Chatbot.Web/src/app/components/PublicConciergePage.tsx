@@ -36,6 +36,12 @@ export function PublicConciergePage({ appId }: PublicConciergePageProps) {
             <strong>服务时间</strong>
             <span>{formatNullableText(conciergeApp?.businessHours, '未设置')}</span>
           </div>
+          <div className="mini-meta">
+            <strong>资料要求</strong>
+            <span>
+              邮箱 {conciergeApp?.requireEmail ? '必填' : '选填'} · 手机 {conciergeApp?.requirePhoneNumber ? '必填' : '选填'}
+            </span>
+          </div>
         </div>
       </section>
 
@@ -60,9 +66,22 @@ export function PublicConciergePage({ appId }: PublicConciergePageProps) {
                 <input
                   className="text-input"
                   disabled={busyAction !== null}
+                  placeholder={conciergeApp?.requireEmail ? '必填' : '选填'}
                   value={intakeForm.email}
                   onChange={event =>
                     setIntakeForm(current => ({ ...current, email: event.currentTarget.value }))
+                  }
+                />
+              </label>
+              <label className="field">
+                <span>手机号</span>
+                <input
+                  className="text-input"
+                  disabled={busyAction !== null}
+                  placeholder={conciergeApp?.requirePhoneNumber ? '必填' : '选填'}
+                  value={intakeForm.phoneNumber}
+                  onChange={event =>
+                    setIntakeForm(current => ({ ...current, phoneNumber: event.currentTarget.value }))
                   }
                 />
               </label>
@@ -143,6 +162,10 @@ export function PublicConciergePage({ appId }: PublicConciergePageProps) {
           <div className="panel-title">接待说明</div>
           <div className="public-copy">
             <div className="mini-meta">
+              <strong>填写指引</strong>
+              <span>{formatNullableText(conciergeApp?.intakeGuidance, '请尽量描述清楚你的问题、目标和期望结果。')}</span>
+            </div>
+            <div className="mini-meta">
               <strong>FAQ 范围</strong>
               <span>{formatNullableText(conciergeApp?.faqScope, '暂未设置')}</span>
             </div>
@@ -154,6 +177,33 @@ export function PublicConciergePage({ appId }: PublicConciergePageProps) {
               <strong>补充说明</strong>
               <span>{formatNullableText(conciergeApp?.description, '暂无附加说明')}</span>
             </div>
+            {conciergeApp?.suggestedPrompts?.trim() ? (
+              <div className="mini-meta">
+                <strong>建议这样提问</strong>
+                <div className="entity-chip-list">
+                  {conciergeApp.suggestedPrompts
+                    .split(/\r?\n|[;；]/)
+                    .map(prompt => prompt.trim())
+                    .filter(Boolean)
+                    .slice(0, 6)
+                    .map(prompt => (
+                      <button
+                        className="entity-chip entity-chip-button"
+                        key={prompt}
+                        type="button"
+                        onClick={() =>
+                          setIntakeForm(current => ({
+                            ...current,
+                            message: current.message.trim() ? current.message : prompt,
+                          }))
+                        }
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </section>
       </section>

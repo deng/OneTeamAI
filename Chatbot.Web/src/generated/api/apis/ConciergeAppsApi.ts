@@ -163,20 +163,36 @@ export class ConciergeAppsApi extends runtime.BaseAPI {
         return await response.value();
     }
 
+    /**
+     * Creates request options for updateConciergeApp without sending the request
+     */
     async updateConciergeAppRequestOpts(requestParameters: UpdateConciergeAppOperationRequest): Promise<runtime.RequestOpts> {
         if (requestParameters['teamId'] == null) {
-            throw new runtime.RequiredError('teamId', 'Required parameter "teamId" was null or undefined when calling updateConciergeApp().');
-        }
-        if (requestParameters['conciergeAppId'] == null) {
-            throw new runtime.RequiredError('conciergeAppId', 'Required parameter "conciergeAppId" was null or undefined when calling updateConciergeApp().');
-        }
-        if (requestParameters['updateConciergeAppRequest'] == null) {
-            throw new runtime.RequiredError('updateConciergeAppRequest', 'Required parameter "updateConciergeAppRequest" was null or undefined when calling updateConciergeApp().');
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling updateConciergeApp().'
+            );
         }
 
-        const headerParameters: runtime.HTTPHeaders = {
-            'Content-Type': 'application/json',
-        };
+        if (requestParameters['conciergeAppId'] == null) {
+            throw new runtime.RequiredError(
+                'conciergeAppId',
+                'Required parameter "conciergeAppId" was null or undefined when calling updateConciergeApp().'
+            );
+        }
+
+        if (requestParameters['updateConciergeAppRequest'] == null) {
+            throw new runtime.RequiredError(
+                'updateConciergeAppRequest',
+                'Required parameter "updateConciergeAppRequest" was null or undefined when calling updateConciergeApp().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
 
         if (this.configuration && this.configuration.accessToken) {
             const token = this.configuration.accessToken;
@@ -195,11 +211,13 @@ export class ConciergeAppsApi extends runtime.BaseAPI {
             path: urlPath,
             method: 'PATCH',
             headers: headerParameters,
-            query: {},
+            query: queryParameters,
             body: UpdateConciergeAppRequestToJSON(requestParameters['updateConciergeAppRequest']),
         };
     }
 
+    /**
+     */
     async updateConciergeAppRaw(requestParameters: UpdateConciergeAppOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<ConciergeAppResponse>> {
         const requestOptions = await this.updateConciergeAppRequestOpts(requestParameters);
         const response = await this.request(requestOptions, initOverrides);
@@ -207,6 +225,8 @@ export class ConciergeAppsApi extends runtime.BaseAPI {
         return new runtime.JSONApiResponse(response, (jsonValue) => ConciergeAppResponseFromJSON(jsonValue));
     }
 
+    /**
+     */
     async updateConciergeApp(requestParameters: UpdateConciergeAppOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<ConciergeAppResponse> {
         const response = await this.updateConciergeAppRaw(requestParameters, initOverrides);
         return await response.value();

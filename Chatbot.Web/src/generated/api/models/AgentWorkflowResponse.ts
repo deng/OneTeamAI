@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { AgentWorkflowTriggerMode } from './AgentWorkflowTriggerMode';
+import {
+    AgentWorkflowTriggerModeFromJSON,
+    AgentWorkflowTriggerModeFromJSONTyped,
+    AgentWorkflowTriggerModeToJSON,
+    AgentWorkflowTriggerModeToJSONTyped,
+} from './AgentWorkflowTriggerMode';
 import type { AgentWorkflowStatus } from './AgentWorkflowStatus';
 import {
     AgentWorkflowStatusFromJSON,
@@ -27,6 +34,13 @@ import {
     AgentWorkflowStepResponseToJSON,
     AgentWorkflowStepResponseToJSONTyped,
 } from './AgentWorkflowStepResponse';
+import type { AiResponseAttemptResponse } from './AiResponseAttemptResponse';
+import {
+    AiResponseAttemptResponseFromJSON,
+    AiResponseAttemptResponseFromJSONTyped,
+    AiResponseAttemptResponseToJSON,
+    AiResponseAttemptResponseToJSONTyped,
+} from './AiResponseAttemptResponse';
 
 /**
  * 
@@ -72,6 +86,12 @@ export interface AgentWorkflowResponse {
     workflowType?: string | null;
     /**
      * 
+     * @type {AgentWorkflowTriggerMode}
+     * @memberof AgentWorkflowResponse
+     */
+    triggerMode?: AgentWorkflowTriggerMode;
+    /**
+     * 
      * @type {string}
      * @memberof AgentWorkflowResponse
      */
@@ -82,6 +102,24 @@ export interface AgentWorkflowResponse {
      * @memberof AgentWorkflowResponse
      */
     summary?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentWorkflowResponse
+     */
+    summarySchemaVersion?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof AgentWorkflowResponse
+     */
+    summaryRawResponse?: string | null;
+    /**
+     * 
+     * @type {Array<AiResponseAttemptResponse>}
+     * @memberof AgentWorkflowResponse
+     */
+    summaryAttempts?: Array<AiResponseAttemptResponse> | null;
     /**
      * 
      * @type {AgentWorkflowStatus}
@@ -151,8 +189,12 @@ export function AgentWorkflowResponseFromJSONTyped(json: any, ignoreDiscriminato
         'conversationId': json['conversationId'] == null ? undefined : json['conversationId'],
         'ticketId': json['ticketId'] == null ? undefined : json['ticketId'],
         'workflowType': json['workflowType'] == null ? undefined : json['workflowType'],
+        'triggerMode': json['triggerMode'] == null ? undefined : AgentWorkflowTriggerModeFromJSON(json['triggerMode']),
         'goal': json['goal'] == null ? undefined : json['goal'],
         'summary': json['summary'] == null ? undefined : json['summary'],
+        'summarySchemaVersion': json['summarySchemaVersion'] == null ? undefined : json['summarySchemaVersion'],
+        'summaryRawResponse': json['summaryRawResponse'] == null ? undefined : json['summaryRawResponse'],
+        'summaryAttempts': json['summaryAttempts'] == null ? undefined : ((json['summaryAttempts'] as Array<any>).map(AiResponseAttemptResponseFromJSON)),
         'status': json['status'] == null ? undefined : AgentWorkflowStatusFromJSON(json['status']),
         'requestedByUserId': json['requestedByUserId'] == null ? undefined : json['requestedByUserId'],
         'startedByMemberId': json['startedByMemberId'] == null ? undefined : json['startedByMemberId'],
@@ -180,8 +222,12 @@ export function AgentWorkflowResponseToJSONTyped(value?: AgentWorkflowResponse |
         'conversationId': value['conversationId'],
         'ticketId': value['ticketId'],
         'workflowType': value['workflowType'],
+        'triggerMode': AgentWorkflowTriggerModeToJSON(value['triggerMode']),
         'goal': value['goal'],
         'summary': value['summary'],
+        'summarySchemaVersion': value['summarySchemaVersion'],
+        'summaryRawResponse': value['summaryRawResponse'],
+        'summaryAttempts': value['summaryAttempts'] == null ? undefined : ((value['summaryAttempts'] as Array<any>).map(AiResponseAttemptResponseToJSON)),
         'status': AgentWorkflowStatusToJSON(value['status']),
         'requestedByUserId': value['requestedByUserId'],
         'startedByMemberId': value['startedByMemberId'],

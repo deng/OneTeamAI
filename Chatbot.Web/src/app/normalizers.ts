@@ -56,6 +56,8 @@ export function normalizeTicketDetailItem(value: {
   status: number;
   priority: number;
   dueAt?: string | Date | null;
+  resolutionSummary?: string | null;
+  resolvedAt?: string | Date | null;
   lastActivityAt?: string | Date | null;
   assignedMemberId?: string | null;
   assignedMemberName?: string | null;
@@ -74,6 +76,10 @@ export function normalizeTicketDetailItem(value: {
   return {
     ...value,
     dueAt: value.dueAt instanceof Date ? value.dueAt : (value.dueAt ? new Date(value.dueAt) : null),
+    resolvedAt:
+      value.resolvedAt instanceof Date
+        ? value.resolvedAt
+        : (value.resolvedAt ? new Date(value.resolvedAt) : null),
     lastActivityAt:
       value.lastActivityAt instanceof Date
         ? value.lastActivityAt

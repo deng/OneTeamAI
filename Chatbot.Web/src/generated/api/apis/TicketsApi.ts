@@ -15,25 +15,45 @@
 
 import * as runtime from '../runtime';
 import type {
+  AddTicketCommentRequest,
   ApiErrorResponse,
   CreateTicketRequest,
+  TicketActivityResponse,
+  TicketDetailResponse,
   TicketResponse,
   UpdateTicketRequest,
 } from '../models/index';
 import {
+    AddTicketCommentRequestFromJSON,
+    AddTicketCommentRequestToJSON,
     ApiErrorResponseFromJSON,
     ApiErrorResponseToJSON,
     CreateTicketRequestFromJSON,
     CreateTicketRequestToJSON,
+    TicketActivityResponseFromJSON,
+    TicketActivityResponseToJSON,
+    TicketDetailResponseFromJSON,
+    TicketDetailResponseToJSON,
     TicketResponseFromJSON,
     TicketResponseToJSON,
     UpdateTicketRequestFromJSON,
     UpdateTicketRequestToJSON,
 } from '../models/index';
 
+export interface AddTicketCommentOperationRequest {
+    teamId: string;
+    ticketId: string;
+    addTicketCommentRequest: AddTicketCommentRequest;
+}
+
 export interface CreateTicketOperationRequest {
     conversationId: string;
     createTicketRequest: CreateTicketRequest;
+}
+
+export interface GetTicketRequest {
+    teamId: string;
+    ticketId: string;
 }
 
 export interface ListTicketsRequest {
@@ -50,6 +70,75 @@ export interface UpdateTicketOperationRequest {
  * 
  */
 export class TicketsApi extends runtime.BaseAPI {
+
+    /**
+     * Creates request options for addTicketComment without sending the request
+     */
+    async addTicketCommentRequestOpts(requestParameters: AddTicketCommentOperationRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling addTicketComment().'
+            );
+        }
+
+        if (requestParameters['ticketId'] == null) {
+            throw new runtime.RequiredError(
+                'ticketId',
+                'Required parameter "ticketId" was null or undefined when calling addTicketComment().'
+            );
+        }
+
+        if (requestParameters['addTicketCommentRequest'] == null) {
+            throw new runtime.RequiredError(
+                'addTicketCommentRequest',
+                'Required parameter "addTicketCommentRequest" was null or undefined when calling addTicketComment().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/tickets/{ticketId}/comments`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"ticketId"}}`, encodeURIComponent(String(requestParameters['ticketId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: AddTicketCommentRequestToJSON(requestParameters['addTicketCommentRequest']),
+        };
+    }
+
+    /**
+     */
+    async addTicketCommentRaw(requestParameters: AddTicketCommentOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TicketActivityResponse>> {
+        const requestOptions = await this.addTicketCommentRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TicketActivityResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async addTicketComment(requestParameters: AddTicketCommentOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TicketActivityResponse> {
+        const response = await this.addTicketCommentRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
 
     /**
      * Creates request options for createTicket without sending the request
@@ -109,6 +198,65 @@ export class TicketsApi extends runtime.BaseAPI {
      */
     async createTicket(requestParameters: CreateTicketOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TicketResponse> {
         const response = await this.createTicketRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for getTicket without sending the request
+     */
+    async getTicketRequestOpts(requestParameters: GetTicketRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['teamId'] == null) {
+            throw new runtime.RequiredError(
+                'teamId',
+                'Required parameter "teamId" was null or undefined when calling getTicket().'
+            );
+        }
+
+        if (requestParameters['ticketId'] == null) {
+            throw new runtime.RequiredError(
+                'ticketId',
+                'Required parameter "ticketId" was null or undefined when calling getTicket().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/teams/{teamId}/tickets/{ticketId}`;
+        urlPath = urlPath.replace(`{${"teamId"}}`, encodeURIComponent(String(requestParameters['teamId'])));
+        urlPath = urlPath.replace(`{${"ticketId"}}`, encodeURIComponent(String(requestParameters['ticketId'])));
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     */
+    async getTicketRaw(requestParameters: GetTicketRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TicketDetailResponse>> {
+        const requestOptions = await this.getTicketRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => TicketDetailResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async getTicket(requestParameters: GetTicketRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<TicketDetailResponse> {
+        const response = await this.getTicketRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

@@ -11,6 +11,7 @@ import type { TicketDetailItem } from '../types';
 import { TicketPanel } from './TicketPanel';
 
 type TicketSectionProps = {
+  autoRunTicketWorkflow: boolean;
   busyAction: string | null;
   canManageTickets: boolean;
   createTicketForm: CreateTicketRequest;
@@ -26,6 +27,7 @@ type TicketSectionProps = {
   ticketDetailError: string | null;
   ticketUpdateDrafts: Record<string, UpdateTicketRequest>;
   onAddComment: () => void;
+  onAutoRunTicketWorkflowChange: (value: boolean) => void;
   onCreateTicket: () => void;
   onCreateTicketFormChange: Dispatch<SetStateAction<CreateTicketRequest>>;
   onSaveTicket: (ticket: TicketResponse) => void;
@@ -39,6 +41,7 @@ type TicketSectionProps = {
 };
 
 export function TicketSection({
+  autoRunTicketWorkflow,
   busyAction,
   canManageTickets,
   createTicketForm,
@@ -54,6 +57,7 @@ export function TicketSection({
   ticketDetailError,
   ticketUpdateDrafts,
   onAddComment,
+  onAutoRunTicketWorkflowChange,
   onCreateTicket,
   onCreateTicketFormChange,
   onSaveTicket,
@@ -136,6 +140,14 @@ export function TicketSection({
               </option>
             ))}
           </select>
+        </label>
+        <label className="checkbox-field">
+          <input
+            checked={autoRunTicketWorkflow}
+            type="checkbox"
+            onChange={event => onAutoRunTicketWorkflowChange(event.currentTarget.checked)}
+          />
+          创建工单后自动启动 AI 协作
         </label>
         <button
           className="secondary-button"

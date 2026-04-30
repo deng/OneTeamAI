@@ -8,6 +8,10 @@ Name | Type
 ------------ | -------------
 `name` | string
 `description` | string
+`stageLabel` | string
+`summary` | string
+`riskSummary` | string
+`nextSteps` | string
 `leadMemberId` | string
 
 ## Example
@@ -19,6 +23,10 @@ import type { CreateProjectRequest } from ''
 const example = {
   "name": null,
   "description": null,
+  "stageLabel": null,
+  "summary": null,
+  "riskSummary": null,
+  "nextSteps": null,
   "leadMemberId": null,
 } satisfies CreateProjectRequest
 

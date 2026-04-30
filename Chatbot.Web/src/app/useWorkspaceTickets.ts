@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  AgentWorkflowTriggerMode,
   TicketPriority,
   TicketStatus,
   type ConversationSummaryResponse,
@@ -30,6 +31,7 @@ function buildDraft(ticket: TicketResponse): UpdateTicketRequest {
     assignedMemberId: ticket.assignedMemberId ?? undefined,
     category: ticket.category ?? '',
     dueAt: ticket.dueAt ?? undefined,
+    resolutionSummary: ticket.resolutionSummary ?? '',
     activityNote: '',
   };
 }
@@ -59,6 +61,7 @@ export function useWorkspaceTickets({
   const [ticketDetailError, setTicketDetailError] = useState<string | null>(null);
   const [ticketCommentDraft, setTicketCommentDraft] = useState('');
   const [createTicketForm, setCreateTicketForm] = useState<CreateTicketRequest>(emptyCreateTicketForm);
+  const [autoRunTicketWorkflow, setAutoRunTicketWorkflow] = useState(false);
 
   const { ticketsApi } = useMemo(() => createWorkspaceApis(token), [token]);
   const selectedTicket = tickets.find(ticket => ticket.id === selectedTicketId) ?? null;
@@ -199,12 +202,26 @@ export function useWorkspaceTickets({
         createTicketRequest: createTicketForm,
       });
 
+      if (autoRunTicketWorkflow && currentTeamId && created.id) {
+        await fetchJson(`/api/teams/${currentTeamId}/tickets/${created.id}/workflows`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token ?? ''}`,
+          },
+          body: JSON.stringify({
+            goal: `围绕新工单“${created.title ?? createTicketForm.title ?? '客户工单'}”自动完成分诊、协调与推进建议。`,
+            triggerMode: AgentWorkflowTriggerMode.NUMBER_1,
+          }),
+        });
+      }
+
       await refreshTickets();
       setSelectedTicketId(created.id ?? '');
       setCreateTicketForm(emptyCreateTicketForm());
       setFeedback({
         kind: 'success',
-        text: `已创建工单 ${created.title ?? ''}。`,
+        text: autoRunTicketWorkflow ? `已创建工单 ${created.title ?? ''}，并自动启动协作。` : `已创建工单 ${created.title ?? ''}。`,
       });
     });
   }
@@ -270,13 +287,16 @@ export function useWorkspaceTickets({
   }
 
   return {
+    autoRunTicketWorkflow,
     createTicketForm,
     filteredTickets,
     isTicketDetailLoading,
     relatedTickets,
+    refreshTickets,
     tickets,
     selectedTicket,
     selectedTicketId,
+    setAutoRunTicketWorkflow,
     ticketCommentDraft,
     ticketDetail,
     ticketDetailError,

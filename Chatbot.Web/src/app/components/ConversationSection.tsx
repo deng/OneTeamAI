@@ -10,6 +10,7 @@ import {
 import { ConversationPanel } from './ConversationPanel';
 
 type ConversationSectionProps = {
+  autoRunConversationWorkflow: boolean;
   busyAction: string | null;
   canManageConversations: boolean;
   conversationDetail: ConversationDetailResponse | null;
@@ -23,6 +24,7 @@ type ConversationSectionProps = {
   selectedCustomer: CustomerResponse | null;
   onCreateConversation: () => void;
   onCreateConversationFormChange: Dispatch<SetStateAction<CreateConversationRequest>>;
+  onAutoRunConversationWorkflowChange: (value: boolean) => void;
   onRunConversationWorkflow: () => void;
   onSelectConversationId: (conversationId: string) => void;
   onSelectRelatedConciergeAppId: (conciergeAppId: string) => void;
@@ -31,6 +33,7 @@ type ConversationSectionProps = {
 };
 
 export function ConversationSection({
+  autoRunConversationWorkflow,
   busyAction,
   canManageConversations,
   conversationDetail,
@@ -44,6 +47,7 @@ export function ConversationSection({
   selectedCustomer,
   onCreateConversation,
   onCreateConversationFormChange,
+  onAutoRunConversationWorkflowChange,
   onRunConversationWorkflow,
   onSelectConversationId,
   onSelectRelatedConciergeAppId,
@@ -118,6 +122,14 @@ export function ConversationSection({
             <option value={TicketPriority.NUMBER_2}>高</option>
             <option value={TicketPriority.NUMBER_3}>紧急</option>
           </select>
+        </label>
+        <label className="checkbox-field">
+          <input
+            checked={autoRunConversationWorkflow}
+            type="checkbox"
+            onChange={event => onAutoRunConversationWorkflowChange(event.currentTarget.checked)}
+          />
+          创建会话后自动启动 AI 协作
         </label>
         <button
           className="secondary-button"

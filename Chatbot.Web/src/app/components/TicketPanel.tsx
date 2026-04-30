@@ -12,6 +12,7 @@ import {
   formatNullableText,
   formatTicketActivityType,
   formatTicketPriority,
+  formatTicketSlaStatus,
   formatTicketStatus,
 } from '../formatters';
 import type { TicketDetailItem } from '../types';
@@ -71,6 +72,7 @@ export function TicketPanel({
       assignedMemberId: current?.assignedMemberId ?? ticket.assignedMemberId ?? undefined,
       category: current?.category ?? ticket.category ?? '',
       dueAt: current?.dueAt ?? ticket.dueAt ?? undefined,
+      resolutionSummary: current?.resolutionSummary ?? ticket.resolutionSummary ?? '',
       activityNote: current?.activityNote ?? '',
       ...overrides,
     };
@@ -97,6 +99,7 @@ export function TicketPanel({
               >
                 <strong>{ticket.title}</strong>
                 <span>{formatTicketPriority(ticket.priority)} / {formatTicketStatus(ticket.status)}</span>
+                <span>SLA：{formatTicketSlaStatus(ticket.dueAt, ticket.resolvedAt, ticket.status)}</span>
                 <span>客户：{formatNullableText(ticket.customerName, '未关联客户')}</span>
                 <span>负责人：{formatNullableText(ticket.assignedMemberName, '未分配')}</span>
                 <button
@@ -209,6 +212,20 @@ export function TicketPanel({
                     }
                   />
                 </label>
+                <label className="field">
+                  <span>解决结果</span>
+                  <textarea
+                    className="text-area"
+                    rows={2}
+                    disabled={busyAction !== null || !canManageTickets || !ticket.id}
+                    value={ticketUpdateDrafts[ticket.id ?? '']?.resolutionSummary ?? ticket.resolutionSummary ?? ''}
+                    onChange={event =>
+                      updateDraft(ticket, {
+                        resolutionSummary: event.currentTarget.value,
+                      })
+                    }
+                  />
+                </label>
                 <button
                   className="secondary-button"
                   disabled={busyAction !== null || !canManageTickets || !ticket.id}
@@ -232,10 +249,13 @@ export function TicketPanel({
             <strong>{ticketDetail.title}</strong>
             <span>{ticketDetail.summary}</span>
             <span>状态：{formatTicketStatus(ticketDetail.status)} · 优先级：{formatTicketPriority(ticketDetail.priority)}</span>
+            <span>SLA：{formatTicketSlaStatus(ticketDetail.dueAt, ticketDetail.resolvedAt, ticketDetail.status)}</span>
             <span>分类：{formatNullableText(ticketDetail.category, '未分类')}</span>
             <span>关联客户：{formatNullableText(ticketDetail.customerName, '未关联客户')}</span>
             <span>负责人：{formatNullableText(ticketDetail.assignedMemberName, '未分配')}</span>
             <span>期望处理时间：{formatDateTime(ticketDetail.dueAt)}</span>
+            <span>完成时间：{formatDateTime(ticketDetail.resolvedAt)}</span>
+            <span>解决结果：{formatNullableText(ticketDetail.resolutionSummary, '尚未填写')}</span>
             <span>最近活动：{formatDateTime(ticketDetail.lastActivityAt)}</span>
             <div className="entity-chip-list">
               {ticketDetail.projectId ? (

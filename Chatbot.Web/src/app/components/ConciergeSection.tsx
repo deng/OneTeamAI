@@ -136,6 +136,34 @@ export function ConciergeSection({
           />
         </label>
         <label className="field">
+          <span>填写指引</span>
+          <textarea
+            className="text-area"
+            rows={2}
+            value={createConciergeForm.intakeGuidance ?? ''}
+            onChange={event =>
+              onCreateConciergeFormChange(current => ({
+                ...current,
+                intakeGuidance: event.currentTarget.value,
+              }))
+            }
+          />
+        </label>
+        <label className="field">
+          <span>建议提问</span>
+          <textarea
+            className="text-area"
+            rows={2}
+            value={createConciergeForm.suggestedPrompts ?? ''}
+            onChange={event =>
+              onCreateConciergeFormChange(current => ({
+                ...current,
+                suggestedPrompts: event.currentTarget.value,
+              }))
+            }
+          />
+        </label>
+        <label className="field">
           <span>渠道标识</span>
           <input
             className="text-input"
@@ -160,6 +188,32 @@ export function ConciergeSection({
               }))
             }
           />
+        </label>
+        <label className="checkbox-field">
+          <input
+            checked={createConciergeForm.requireEmail ?? false}
+            type="checkbox"
+            onChange={event =>
+              onCreateConciergeFormChange(current => ({
+                ...current,
+                requireEmail: event.currentTarget.checked,
+              }))
+            }
+          />
+          要求客户填写邮箱
+        </label>
+        <label className="checkbox-field">
+          <input
+            checked={createConciergeForm.requirePhoneNumber ?? false}
+            type="checkbox"
+            onChange={event =>
+              onCreateConciergeFormChange(current => ({
+                ...current,
+                requirePhoneNumber: event.currentTarget.checked,
+              }))
+            }
+          />
+          要求客户填写手机号
         </label>
         <label className="field">
           <span>主 AI 员工</span>

@@ -20,6 +20,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   UserResponse,
+  UserSessionResponse,
 } from '../models/index';
 import {
     ApiErrorResponseFromJSON,
@@ -32,6 +33,8 @@ import {
     RegisterRequestToJSON,
     UserResponseFromJSON,
     UserResponseToJSON,
+    UserSessionResponseFromJSON,
+    UserSessionResponseToJSON,
 } from '../models/index';
 
 export interface LoginOperationRequest {
@@ -40,6 +43,10 @@ export interface LoginOperationRequest {
 
 export interface RegisterOperationRequest {
     registerRequest: RegisterRequest;
+}
+
+export interface RevokeUserSessionRequest {
+    sessionId: string;
 }
 
 /**
@@ -87,6 +94,49 @@ export class AuthApi extends runtime.BaseAPI {
      */
     async getCurrentUser(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserResponse> {
         const response = await this.getCurrentUserRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for listCurrentUserSessions without sending the request
+     */
+    async listCurrentUserSessionsRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/auth/sessions`;
+
+        return {
+            path: urlPath,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     */
+    async listCurrentUserSessionsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<UserSessionResponse>>> {
+        const requestOptions = await this.listCurrentUserSessionsRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(UserSessionResponseFromJSON));
+    }
+
+    /**
+     */
+    async listCurrentUserSessions(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<UserSessionResponse>> {
+        const response = await this.listCurrentUserSessionsRaw(initOverrides);
         return await response.value();
     }
 
@@ -186,6 +236,48 @@ export class AuthApi extends runtime.BaseAPI {
     }
 
     /**
+     * Creates request options for logoutAllSessions without sending the request
+     */
+    async logoutAllSessionsRequestOpts(): Promise<runtime.RequestOpts> {
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/auth/logout-all`;
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     */
+    async logoutAllSessionsRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
+        const requestOptions = await this.logoutAllSessionsRequestOpts();
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.VoidApiResponse(response);
+    }
+
+    /**
+     */
+    async logoutAllSessions(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
+        await this.logoutAllSessionsRaw(initOverrides);
+    }
+
+    /**
      * Creates request options for register without sending the request
      */
     async registerRequestOpts(requestParameters: RegisterOperationRequest): Promise<runtime.RequestOpts> {
@@ -235,6 +327,57 @@ export class AuthApi extends runtime.BaseAPI {
      */
     async register(requestParameters: RegisterOperationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<AuthResponse> {
         const response = await this.registerRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * Creates request options for revokeUserSession without sending the request
+     */
+    async revokeUserSessionRequestOpts(requestParameters: RevokeUserSessionRequest): Promise<runtime.RequestOpts> {
+        if (requestParameters['sessionId'] == null) {
+            throw new runtime.RequiredError(
+                'sessionId',
+                'Required parameter "sessionId" was null or undefined when calling revokeUserSession().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Bearer", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+
+        let urlPath = `/api/auth/sessions/{sessionId}/revoke`;
+        urlPath = urlPath.replace(`{${"sessionId"}}`, encodeURIComponent(String(requestParameters['sessionId'])));
+
+        return {
+            path: urlPath,
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+        };
+    }
+
+    /**
+     */
+    async revokeUserSessionRaw(requestParameters: RevokeUserSessionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UserSessionResponse>> {
+        const requestOptions = await this.revokeUserSessionRequestOpts(requestParameters);
+        const response = await this.request(requestOptions, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UserSessionResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async revokeUserSession(requestParameters: RevokeUserSessionRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UserSessionResponse> {
+        const response = await this.revokeUserSessionRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

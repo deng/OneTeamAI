@@ -65,9 +65,29 @@ export interface ProjectResponse {
      * @memberof ProjectResponse
      */
     description?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectResponse
+     */
     stageLabel?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectResponse
+     */
     summary?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectResponse
+     */
     riskSummary?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof ProjectResponse
+     */
     nextSteps?: string | null;
     /**
      * 
@@ -81,9 +101,29 @@ export interface ProjectResponse {
      * @memberof ProjectResponse
      */
     leadMemberId?: string | null;
-    participantMemberIds?: Array<string>;
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof ProjectResponse
+     */
+    participantMemberIds?: Array<string> | null;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectResponse
+     */
     participantCount?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectResponse
+     */
     ticketCount?: number;
+    /**
+     * 
+     * @type {number}
+     * @memberof ProjectResponse
+     */
     customerCount?: number;
     /**
      * 
@@ -174,3 +214,4 @@ export function ProjectResponseToJSONTyped(value?: ProjectResponse | null, ignor
         'externalId': value['externalId'],
     };
 }
+

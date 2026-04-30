@@ -24,6 +24,8 @@ import { CustomerOpsSection } from './CustomerOpsSection';
 import { ProjectOpsSection } from './ProjectOpsSection';
 
 type BusinessWorkspaceSectionProps = {
+  autoRunConversationWorkflow: boolean;
+  autoRunTicketWorkflow: boolean;
   busyAction: string | null;
   canManage: boolean;
   conciergeApps: ConciergeAppResponse[];
@@ -103,11 +105,15 @@ type BusinessWorkspaceSectionProps = {
   onTicketCommentDraftChange: (value: string) => void;
   onTicketDraftsChange: Dispatch<SetStateAction<Record<string, UpdateTicketRequest>>>;
   onAddTicketComment: () => void;
+  onAutoRunConversationWorkflowChange: (value: boolean) => void;
+  onAutoRunTicketWorkflowChange: (value: boolean) => void;
   onProjectWorkflowFormChange: Dispatch<SetStateAction<RunTicketWorkflowRequest>>;
   onCustomerWorkflowFormChange: Dispatch<SetStateAction<RunTicketWorkflowRequest>>;
 };
 
 export function BusinessWorkspaceSection({
+  autoRunConversationWorkflow,
+  autoRunTicketWorkflow,
   busyAction,
   canManage,
   conciergeApps,
@@ -187,6 +193,8 @@ export function BusinessWorkspaceSection({
   onTicketCommentDraftChange,
   onTicketDraftsChange,
   onAddTicketComment,
+  onAutoRunConversationWorkflowChange,
+  onAutoRunTicketWorkflowChange,
   onProjectWorkflowFormChange,
   onCustomerWorkflowFormChange,
 }: BusinessWorkspaceSectionProps) {
@@ -234,6 +242,8 @@ export function BusinessWorkspaceSection({
       />
 
       <CustomerOpsSection
+        autoRunConversationWorkflow={autoRunConversationWorkflow}
+        autoRunTicketWorkflow={autoRunTicketWorkflow}
         busyAction={busyAction}
         canManage={canManage}
         conversationDetail={conversationDetail}
@@ -268,6 +278,8 @@ export function BusinessWorkspaceSection({
         workflowScope={customerWorkflowScope}
         workflowScopeLabel={customerWorkflowScopeLabel}
         onAddTicketComment={onAddTicketComment}
+        onAutoRunConversationWorkflowChange={onAutoRunConversationWorkflowChange}
+        onAutoRunTicketWorkflowChange={onAutoRunTicketWorkflowChange}
         onCreateConversation={onCreateConversation}
         onCreateConversationFormChange={onCreateConversationFormChange}
         onCreateCustomer={onCreateCustomer}

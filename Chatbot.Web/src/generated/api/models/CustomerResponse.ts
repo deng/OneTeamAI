@@ -30,7 +30,9 @@ import {
 import type { CustomerFollowUpStatus } from './CustomerFollowUpStatus';
 import {
     CustomerFollowUpStatusFromJSON,
+    CustomerFollowUpStatusFromJSONTyped,
     CustomerFollowUpStatusToJSON,
+    CustomerFollowUpStatusToJSONTyped,
 } from './CustomerFollowUpStatus';
 import type { ExternalSystemType } from './ExternalSystemType';
 import {
@@ -172,7 +174,7 @@ export function CustomerResponseFromJSONTyped(json: any, ignoreDiscriminator: bo
         'sourceLabel': json['sourceLabel'] == null ? undefined : json['sourceLabel'],
         'tags': json['tags'] == null ? undefined : json['tags'],
         'followUpStatus': json['followUpStatus'] == null ? undefined : CustomerFollowUpStatusFromJSON(json['followUpStatus']),
-        'lastContactedAt': json['lastContactedAt'] == null ? undefined : new Date(json['lastContactedAt']),
+        'lastContactedAt': json['lastContactedAt'] == null ? undefined : (new Date(json['lastContactedAt'])),
         'projectId': json['projectId'] == null ? undefined : json['projectId'],
         'notes': json['notes'] == null ? undefined : json['notes'],
         'status': json['status'] == null ? undefined : CustomerStatusFromJSON(json['status']),
@@ -202,7 +204,7 @@ export function CustomerResponseToJSONTyped(value?: CustomerResponse | null, ign
         'sourceLabel': value['sourceLabel'],
         'tags': value['tags'],
         'followUpStatus': CustomerFollowUpStatusToJSON(value['followUpStatus']),
-        'lastContactedAt': value['lastContactedAt']?.toISOString(),
+        'lastContactedAt': value['lastContactedAt'] == null ? value['lastContactedAt'] : value['lastContactedAt'].toISOString(),
         'projectId': value['projectId'],
         'notes': value['notes'],
         'status': CustomerStatusToJSON(value['status']),
@@ -211,3 +213,4 @@ export function CustomerResponseToJSONTyped(value?: CustomerResponse | null, ign
         'externalId': value['externalId'],
     };
 }
+

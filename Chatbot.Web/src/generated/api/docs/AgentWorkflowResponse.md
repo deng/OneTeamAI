@@ -12,8 +12,12 @@ Name | Type
 `conversationId` | string
 `ticketId` | string
 `workflowType` | string
+`triggerMode` | [AgentWorkflowTriggerMode](AgentWorkflowTriggerMode.md)
 `goal` | string
 `summary` | string
+`summarySchemaVersion` | string
+`summaryRawResponse` | string
+`summaryAttempts` | [Array&lt;AiResponseAttemptResponse&gt;](AiResponseAttemptResponse.md)
 `status` | [AgentWorkflowStatus](AgentWorkflowStatus.md)
 `requestedByUserId` | string
 `startedByMemberId` | string
@@ -35,8 +39,12 @@ const example = {
   "conversationId": null,
   "ticketId": null,
   "workflowType": null,
+  "triggerMode": null,
   "goal": null,
   "summary": null,
+  "summarySchemaVersion": null,
+  "summaryRawResponse": null,
+  "summaryAttempts": null,
   "status": null,
   "requestedByUserId": null,
   "startedByMemberId": null,

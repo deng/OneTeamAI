@@ -13,6 +13,7 @@ type PublicConciergeIntakeResponse = {
 type PublicConciergeIntakeForm = {
   displayName: string;
   email: string;
+  phoneNumber: string;
   companyName: string;
   message: string;
   autoCreateTicket: boolean;
@@ -23,6 +24,7 @@ function emptyIntakeForm(): PublicConciergeIntakeForm {
   return {
     displayName: '',
     email: '',
+    phoneNumber: '',
     companyName: '',
     message: '',
     autoCreateTicket: true,
@@ -79,6 +81,22 @@ export function usePublicConcierge(appId: string) {
       return;
     }
 
+    if (conciergeApp?.requireEmail && !intakeForm.email.trim()) {
+      setFeedback({
+        kind: 'error',
+        text: '当前坐台程序要求填写邮箱。',
+      });
+      return;
+    }
+
+    if (conciergeApp?.requirePhoneNumber && !intakeForm.phoneNumber.trim()) {
+      setFeedback({
+        kind: 'error',
+        text: '当前坐台程序要求填写手机号。',
+      });
+      return;
+    }
+
     setBusyAction('submit-public-intake');
     setFeedback(null);
 
@@ -90,7 +108,10 @@ export function usePublicConcierge(appId: string) {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(intakeForm),
+          body: JSON.stringify({
+            ...intakeForm,
+            phoneNumber: intakeForm.phoneNumber.trim(),
+          }),
         },
       );
 
