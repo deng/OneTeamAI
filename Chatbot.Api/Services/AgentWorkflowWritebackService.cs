@@ -1,9 +1,10 @@
 using Chatbot.Api.Domain.Entities;
 using Chatbot.Api.Domain.Enums;
+using Chatbot.Api.Infrastructure.Persistence;
 
 namespace Chatbot.Api.Services;
 
-public sealed class AgentWorkflowWritebackService
+public sealed class AgentWorkflowWritebackService(AppDbContext dbContext)
 {
     public Task ApplyAsync(
         AgentWorkflowRun workflow,
@@ -14,7 +15,7 @@ public sealed class AgentWorkflowWritebackService
         var now = DateTimeOffset.UtcNow;
         ticket.LastActivityAt = now;
         ticket.UpdatedAt = now;
-        ticket.Activities.Add(new TicketActivity
+        dbContext.TicketActivities.Add(new TicketActivity
         {
             TeamId = ticket.TeamId,
             Ticket = ticket,
@@ -50,9 +51,9 @@ public sealed class AgentWorkflowWritebackService
     {
         var now = DateTimeOffset.UtcNow;
         conversation.UpdatedAt = now;
-        conversation.Messages.Add(new ConversationMessage
+        dbContext.ConversationMessages.Add(new ConversationMessage
         {
-            Conversation = conversation,
+            ConversationId = conversation.Id,
             ParticipantType = ConversationParticipantType.AiMember,
             MemberId = workflow.StartedByMemberId ?? workflow.Steps.OrderBy(x => x.Sequence).FirstOrDefault()?.MemberId,
             SenderName = "AI 协作摘要",

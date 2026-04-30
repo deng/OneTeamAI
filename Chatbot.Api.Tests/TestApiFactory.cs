@@ -1,4 +1,5 @@
 using Chatbot.Api.Infrastructure.Persistence;
+using Chatbot.Api.Services;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Data.Sqlite;
@@ -12,6 +13,7 @@ namespace Chatbot.Api.Tests;
 public sealed class TestApiFactory : WebApplicationFactory<Program>, IDisposable
 {
     private readonly string _databasePath = Path.Combine(Path.GetTempPath(), $"chatbot-tests-{Guid.NewGuid():N}.db");
+    public WorkflowTextCompletionStub WorkflowTextStub { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -32,8 +34,10 @@ public sealed class TestApiFactory : WebApplicationFactory<Program>, IDisposable
         {
             services.RemoveAll<DbContextOptions<AppDbContext>>();
             services.RemoveAll<AppDbContext>();
+            services.RemoveAll<IWorkflowTextCompletionService>();
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite($"Data Source={_databasePath}"));
+            services.AddSingleton<IWorkflowTextCompletionService>(WorkflowTextStub);
 
             using var scope = services.BuildServiceProvider().CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

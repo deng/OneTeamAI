@@ -9,13 +9,16 @@ using System.ClientModel;
 
 namespace Chatbot.Api.Services;
 
-public sealed class ChatbotAgentRuntime
+public sealed class ChatbotAgentRuntime : IWorkflowTextCompletionService
 {
     private readonly AIHostAgent _hostAgent;
+    private readonly ChatClient _chatClient;
+    private readonly string _baseInstructions;
 
     public ChatbotAgentRuntime(IOptions<ChatbotOptions> options, ILoggerFactory loggerFactory)
     {
         var settings = options.Value;
+        _baseInstructions = settings.Instructions;
         var openAiOptions = new OpenAIClientOptions();
         var blockchainQueryService = new BlockchainTransactionQueryService();
 
@@ -24,12 +27,12 @@ public sealed class ChatbotAgentRuntime
             openAiOptions.Endpoint = new Uri(settings.Endpoint);
         }
 
-        var chatClient = new ChatClient(
+        _chatClient = new ChatClient(
             settings.Model,
             new ApiKeyCredential(settings.ApiKey),
             openAiOptions);
 
-        var agent = chatClient.AsAIAgent(
+        var agent = _chatClient.AsAIAgent(
             settings.Instructions,
             settings.AgentName,
             settings.Description,
@@ -57,4 +60,46 @@ public sealed class ChatbotAgentRuntime
 
     public ValueTask SaveSessionAsync(string conversationId, AgentSession session, CancellationToken cancellationToken) =>
         _hostAgent.SaveSessionAsync(conversationId, session, cancellationToken);
+
+    public async Task<string> CompleteAsync(
+        string prompt,
+        string? sessionId,
+        CancellationToken cancellationToken)
+    {
+        var effectiveSessionId = string.IsNullOrWhiteSpace(sessionId)
+            ? Guid.NewGuid().ToString("N")
+            : sessionId.Trim();
+        var session = await GetOrCreateSessionAsync(effectiveSessionId, cancellationToken);
+        var chunks = new List<string>();
+
+        await foreach (var update in Agent.RunStreamingAsync(prompt, session, cancellationToken: cancellationToken))
+        {
+            if (!string.IsNullOrWhiteSpace(update.Text))
+            {
+                chunks.Add(update.Text);
+            }
+        }
+
+        await SaveSessionAsync(effectiveSessionId, session, cancellationToken);
+        return string.Concat(chunks).Trim();
+    }
+
+    public async Task<string> CompleteTextAsync(
+        string systemPrompt,
+        string userPrompt,
+        CancellationToken cancellationToken)
+    {
+        var completion = await _chatClient.CompleteChatAsync(
+            [
+                new SystemChatMessage($"{_baseInstructions}\n\n{systemPrompt}".Trim()),
+                new UserChatMessage(userPrompt)
+            ],
+            new ChatCompletionOptions
+            {
+                MaxOutputTokenCount = 600,
+            },
+            cancellationToken);
+
+        return string.Concat(completion.Value.Content.Select(part => part.Text ?? string.Empty)).Trim();
+    }
 }
