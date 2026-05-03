@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react';
-import type { UIMessage } from '@ai-sdk/react';
-import { isTextUIPart } from 'ai';
+import type { ChatMessage } from './types';
 
-function getMessageText(message: UIMessage) {
+function getMessageText(message: ChatMessage) {
   return (
     message.parts
-      .filter(isTextUIPart)
+      .filter(part => part.type === 'text')
       .map(part => part.text)
       .join('') ?? ''
   );
 }
 
-export function useTypewriterMessages(messages: UIMessage[], isStreaming: boolean) {
+export function useTypewriterMessages(messages: ChatMessage[], isStreaming: boolean) {
   const [displayedTexts, setDisplayedTexts] = useState<Record<string, string>>({});
 
   useEffect(() => {

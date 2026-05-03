@@ -109,3 +109,14 @@ export type Feedback = {
   kind: 'success' | 'error';
   text: string;
 };
+
+export type ChatMessagePart = {
+  type: 'text';
+  text: string;
+};
+
+export type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant';
+  parts: ChatMessagePart[];
+};

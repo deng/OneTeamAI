@@ -1,11 +1,5 @@
 import type { AiMemberTemplateItem } from './types';
 
-export const starterPrompts = [
-  '帮我总结今天的项目进展',
-  '给出一个客服机器人欢迎语',
-  '解释一下 Microsoft Agent Framework 的作用',
-];
-
 export const aiRoleTemplates: ReadonlyArray<AiMemberTemplateItem> = [
   {
     key: 'front-desk',
