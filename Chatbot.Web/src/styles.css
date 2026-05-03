@@ -935,7 +935,9 @@ textarea {
 
 .retry-button:hover {
   background: rgba(191, 88, 68, 0.08);
-}@keyframes blink-caret {
+}
+
+@keyframes blink-caret {
   0%,
   49% {
     opacity: 0.85;

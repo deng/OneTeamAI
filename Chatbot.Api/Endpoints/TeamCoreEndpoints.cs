@@ -185,7 +185,7 @@ partial class Program
             var teamName = request.Name.Trim();
             if (string.IsNullOrWhiteSpace(teamName))
             {
-                return Results.BadRequest(new ApiErrorResponse("name is required"));
+                return BadRequestError("name is required", "team_name_required");
             }
 
             team.Name = teamName;

@@ -57,7 +57,7 @@ partial class Program
 
             if (team is null)
             {
-                return Results.NotFound(new ApiErrorResponse("team was not found"));
+                return NotFoundError("team was not found", "team_not_found");
             }
 
             var displayName = request.DisplayName.Trim();

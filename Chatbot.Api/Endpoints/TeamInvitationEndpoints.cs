@@ -171,17 +171,17 @@ partial class Program
 
             if (invitation is null)
             {
-                return Results.NotFound(new ApiErrorResponse("invitation was not found"));
+                return NotFoundError("invitation was not found", "invitation_not_found");
             }
 
             if (!string.Equals(invitation.Email, currentUser.Email, StringComparison.OrdinalIgnoreCase))
             {
-                return Results.Json(new ApiErrorResponse("forbidden"), statusCode: StatusCodes.Status403Forbidden);
+                return ForbiddenError();
             }
 
             if (invitation.Status != InvitationStatus.Pending)
             {
-                return Results.BadRequest(new ApiErrorResponse("invitation is not pending"));
+                return BadRequestError("invitation is not pending", "invitation_not_pending");
             }
 
             if (invitation.ExpiresAt <= DateTimeOffset.UtcNow)
