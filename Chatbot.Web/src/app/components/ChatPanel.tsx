@@ -1,5 +1,5 @@
 import type { RefObject } from 'react';
-import type { UIMessage } from '@ai-sdk/react';
+import type { ChatMessage } from '../types';
 
 type ChatPanelProps = {
   isStreaming: boolean;
@@ -14,7 +14,7 @@ type ChatPanelProps = {
   onSelectTicketContext: () => void;
   onStop: () => void;
   scrollRef: RefObject<HTMLDivElement | null>;
-  messages: UIMessage[];
+  messages: ChatMessage[];
   displayedTexts: Record<string, string>;
   input: string;
   onInputChange: (value: string) => void;

@@ -1,14 +1,14 @@
 import { useRef, useState } from 'react';
-import type { UIMessage } from '@ai-sdk/react';
+import type { ChatMessage } from './types';
 import { useTypewriterMessages } from './useTypewriterMessages';
 import { fetchJson, getErrorMessage } from './workspaceApi';
 
-function createMessage(role: 'user' | 'assistant', text: string): UIMessage {
+function createMessage(role: 'user' | 'assistant', text: string): ChatMessage {
   return {
     id: crypto.randomUUID(),
     role,
-    parts: [{ type: 'text', text }] as UIMessage['parts'],
-  } as UIMessage;
+    parts: [{ type: 'text', text }],
+  };
 }
 
 export function useWorkspaceChat() {
@@ -16,7 +16,7 @@ export function useWorkspaceChat() {
   const [chatError, setChatError] = useState<string | null>(null);
   const [chatSessionId, setChatSessionId] = useState<string | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
-  const [messages, setMessages] = useState<UIMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);

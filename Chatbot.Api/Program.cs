@@ -97,13 +97,18 @@ app.UseSwaggerUI(options =>
 MapSystemEndpoints(app);
 MapAuthEndpoints(app);
 MapTeamEndpoints(app);
+MapTeamMemberEndpoints(app);
+MapTeamTemplateEndpoints(app);
+MapTeamInvitationEndpoints(app);
 MapProjectEndpoints(app);
 MapConciergeAppEndpoints(app);
 MapCustomerEndpoints(app);
 MapConversationEndpoints(app);
 MapTicketEndpoints(app);
 MapWorkflowEndpoints(app);
-MapIntegrationEndpoints(app);
+MapIntegrationConnectionEndpoints(app);
+MapIntegrationPreviewEndpoints(app);
+MapIntegrationImportEndpoints(app);
 MapChatEndpoints(app);
 
 app.Run();
