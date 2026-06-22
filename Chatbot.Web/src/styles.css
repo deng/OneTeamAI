@@ -957,6 +957,76 @@ textarea {
   }
 }
 
+.modal-overlay {
+  border: 0;
+  padding: 0;
+  max-width: 520px;
+  width: 90vw;
+  border-radius: 24px;
+  background: rgba(255, 252, 246, 0.96);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 32px 80px rgba(32, 48, 39, 0.25);
+  animation: modal-enter 220ms ease;
+}
+
+.modal-overlay::backdrop {
+  background: rgba(30, 50, 38, 0.32);
+  animation: modal-backdrop 220ms ease;
+}
+
+@keyframes modal-enter {
+  from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes modal-backdrop {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+}
+
+.modal-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f2f1f;
+}
+
+.modal-close {
+  border: 0;
+  border-radius: 999px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #5a6f62;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.modal-close:hover {
+  background: rgba(47, 72, 58, 0.08);
+  transform: scale(1.1);
+}
+
+.modal-content {
+  padding: 20px 24px 24px;
+  overflow: auto;
+}
+
 @media (max-width: 900px) {
   .shell {
     height: auto;

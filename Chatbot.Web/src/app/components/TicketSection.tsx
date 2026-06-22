@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, SetStateAction } from 'react';
 import {
   TicketPriority,
   type ConversationSummaryResponse,
@@ -8,6 +8,7 @@ import {
   type UpdateTicketRequest,
 } from '../../generated/api';
 import type { TicketDetailItem } from '../types';
+import { Modal } from './Modal';
 import { TicketPanel } from './TicketPanel';
 
 type TicketSectionProps = {
@@ -75,11 +76,17 @@ export function TicketSection({
   onTicketCommentDraftChange,
   onTicketDraftsChange,
 }: TicketSectionProps) {
+  const [showForm, setShowForm] = useState(false);
   return (
     <>
       <div className="panel-title panel-title-gap">工单</div>
-      <div className="form-card">
-        <div className="form-card-title">手动建单</div>
+      {canManageTickets ? (
+        <button className="secondary-button" type="button" onClick={() => setShowForm(true)}>
+          + 创建工单
+        </button>
+      ) : null}
+
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="手动建单">
         <label className="field">
           <span>当前会话</span>
           <input
@@ -159,11 +166,11 @@ export function TicketSection({
           className="secondary-button"
           disabled={busyAction !== null || !selectedConversation || !createTicketForm.title?.trim()}
           type="button"
-          onClick={onCreateTicket}
+          onClick={() => { onCreateTicket(); setShowForm(false); }}
         >
           {busyAction === 'create-ticket' ? '创建中...' : '创建工单'}
         </button>
-      </div>
+      </Modal>
 
       <TicketPanel
         filteredTickets={filteredTickets}

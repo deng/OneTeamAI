@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useState, type Dispatch, SetStateAction } from 'react';
 import {
   CustomerFollowUpStatus,
   type ConversationSummaryResponse,
@@ -8,6 +8,7 @@ import {
   type TicketResponse,
   type UpdateCustomerRequest,
 } from '../../generated/api';
+import { Modal } from './Modal';
 import { CustomerPanel } from './CustomerPanel';
 
 type CustomerSectionProps = {
@@ -57,11 +58,15 @@ export function CustomerSection({
   onSelectRelatedProjectId,
   onSelectRelatedTicketId,
 }: CustomerSectionProps) {
+  const [showForm, setShowForm] = useState(false);
   return (
     <>
       <div className="panel-title panel-title-gap">客户</div>
-      <div className="form-card">
-        <div className="form-card-title">创建客户</div>
+      <button className="secondary-button" type="button" onClick={() => setShowForm(true)}>
+        + 创建客户
+      </button>
+
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="创建客户">
         <label className="field">
           <span>客户名</span>
           <input
@@ -163,11 +168,11 @@ export function CustomerSection({
           className="secondary-button"
           disabled={busyAction !== null}
           type="button"
-          onClick={onCreateCustomer}
+          onClick={() => { onCreateCustomer(); setShowForm(false); }}
         >
           {busyAction === 'create-customer' ? '创建中...' : '创建客户'}
         </button>
-      </div>
+      </Modal>
 
       <CustomerPanel
         customers={customers}
