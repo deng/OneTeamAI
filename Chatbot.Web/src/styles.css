@@ -138,6 +138,13 @@ textarea {
   margin-top: 14px;
 }
 
+.setup-stack-centered {
+  width: 100%;
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .form-card {
   width: 100%;
   padding: 16px;
