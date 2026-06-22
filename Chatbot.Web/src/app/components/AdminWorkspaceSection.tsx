@@ -1,192 +1,86 @@
-import type { Dispatch, SetStateAction } from 'react';
-import type {
-  CreateAiMemberRequest,
-  CreateHumanMemberRequest,
-  CreateIntegrationConnectionRequest,
-  CreateInvitationRequest,
-  FileKnowledgeItemResponse,
-  IntegrationConnectionHealthResponse,
-  IntegrationConnectionResponse,
-  IntegrationPreviewItemResponse,
-  InvitationResponse,
-  MemberRole,
-  MemberResponse,
-  ProjectResponse,
-  CustomerResponse,
-  TeamSummaryResponse,
-  TicketResponse,
-  UpdateTeamRequest,
-  UserResponse,
-} from '../../generated/api';
-import type {
-  AiMemberTemplateEditorForm,
-  AiMemberTemplateItem,
-  AuditLogItem,
-  UserSessionItem,
-} from '../types';
+import { useAuthContext, useStatusContext, useTeamContext, useResourcesContext, useTeamSettingsContext, useIntegrationsContext, useDerivedContext, useNavigationContext } from '../workspaceContexts';
 import { IntegrationPanel } from './IntegrationPanel';
 import { TeamManagementPanel } from './TeamManagementPanel';
 import { TeamSettingsPanel } from './TeamSettingsPanel';
 
-type AdminWorkspaceSectionProps = {
-  busyAction: string | null;
-  createdTeam: TeamSummaryResponse | null;
-  currentUser: UserResponse | null;
-  myTeamsCount: number;
-  teamSettingsForm: UpdateTeamRequest;
-  userSessions: UserSessionItem[];
-  teamMembers: MemberResponse[];
-  projectsLeadCountByMemberId: Record<string, number>;
-  conciergeCountByMemberId: Record<string, number>;
-  teamInvitations: InvitationResponse[];
-  myInvitations: InvitationResponse[];
-  teamAuditLogs: AuditLogItem[];
-  myAuditLogs: AuditLogItem[];
-  integrationForm: CreateIntegrationConnectionRequest;
-  integrationFolderPath: string;
-  canManageIntegrations: boolean;
-  integrationConnections: IntegrationConnectionResponse[];
-  selectedIntegrationId: string;
-  selectedIntegration: IntegrationConnectionResponse | null;
-  integrationPreviewCount: number;
-  selectedIntegrationHealth: IntegrationConnectionHealthResponse | null;
-  integrationFiles: FileKnowledgeItemResponse[];
-  integrationPreviewCustomers: IntegrationPreviewItemResponse[];
-  integrationPreviewProjects: IntegrationPreviewItemResponse[];
-  integrationPreviewTickets: IntegrationPreviewItemResponse[];
-  integrationPreviewTasks: IntegrationPreviewItemResponse[];
-  integrationAuditLogs: AuditLogItem[];
-  importedCustomerExternalIds: string[];
-  importedProjectExternalIds: string[];
-  importedTicketExternalIds: string[];
-  mappedCustomers: CustomerResponse[];
-  mappedProjects: ProjectResponse[];
-  mappedTickets: TicketResponse[];
-  currentProjectId: string;
-  currentProject: ProjectResponse | null;
-  humanMemberForm: CreateHumanMemberRequest;
-  aiMemberForm: CreateAiMemberRequest;
-  aiTemplateEditorForm: AiMemberTemplateEditorForm;
-  aiTemplateLibrary: ReadonlyArray<AiMemberTemplateItem>;
-  invitationForm: CreateInvitationRequest;
-  aiTemplateOptions: ReadonlyArray<AiMemberTemplateItem>;
-  selectedAiTemplateId: string;
-  onTeamSettingsFormChange: Dispatch<SetStateAction<UpdateTeamRequest>>;
-  onHumanMemberFormChange: Dispatch<SetStateAction<CreateHumanMemberRequest>>;
-  onAiMemberFormChange: Dispatch<SetStateAction<CreateAiMemberRequest>>;
-  onAiTemplateEditorFormChange: Dispatch<SetStateAction<AiMemberTemplateEditorForm>>;
-  onInvitationFormChange: Dispatch<SetStateAction<CreateInvitationRequest>>;
-  onIntegrationFolderPathChange: (value: string) => void;
-  onNavigateToCustomer: (customerId: string) => void;
-  onNavigateToProject: (projectId: string) => void;
-  onNavigateToTicket: (ticketId: string) => void;
-  onSaveTeamSettings: () => void;
-  onRevokeSession: (sessionId: string, isCurrent: boolean) => void;
-  onLogoutAll: () => void;
-  onUpdateMemberRole: (member: MemberResponse, role: MemberRole) => void;
-  onRemoveMember: (member: MemberResponse) => void;
-  onRevokeInvitation: (invitation: InvitationResponse) => void;
-  onAcceptInvitation: (invitation: InvitationResponse) => void;
-  onApplyAiTemplate: (templateKey: string) => void;
-  onStartNewAiTemplate: () => void;
-  onDuplicateAiTemplate: (templateId: string) => void;
-  onEditAiTemplate: (templateId: string) => void;
-  onCreateHumanMember: () => void;
-  onCreateAiMember: () => void;
-  onCreateAiTemplateTemplate: () => void;
-  onUpdateAiTemplateTemplate: () => void;
-  onToggleAiTemplate: (template: AiMemberTemplateItem) => void;
-  onCreateInvitation: () => void;
-  onIntegrationFormChange: Dispatch<SetStateAction<CreateIntegrationConnectionRequest>>;
-  onCreateIntegration: () => void;
-  onImportPreviewCustomer: (externalRecordId: string, forceUpdate?: boolean) => void;
-  onImportPreviewProject: (externalRecordId: string, forceUpdate?: boolean) => void;
-  onImportPreviewTicket: (externalRecordId: string, forceUpdate?: boolean) => void;
-  onRefreshIntegrationPreview: () => void;
-  onRetryLatestIntegrationIssue: () => void;
-  onSelectIntegrationId: (integrationId: string) => void;
-  onValidateIntegration: () => void;
-};
+export function AdminWorkspaceSection() {
+  const { busyAction } = useStatusContext();
+  const { currentUser } = useAuthContext();
+  const { currentTeam, currentTeamId, teams } = useTeamContext();
+  const { selectedProjectId: currentProjectId, selectedProject: currentProject, teamMembers } = useResourcesContext();
+  const {
+    aiMemberForm,
+    aiTemplateEditorForm,
+    aiTemplateLibrary,
+    aiTemplateOptions,
+    humanMemberForm,
+    invitationForm,
+    myAuditLogs,
+    myInvitations,
+    teamAuditLogs,
+    teamInvitations,
+    teamSettingsForm,
+    userSessions,
+    setAiMemberForm,
+    setAiTemplateEditorForm,
+    setHumanMemberForm,
+    setInvitationForm,
+    setTeamSettingsForm,
+    handleApplyAiTemplate,
+    handleAcceptInvitation,
+    handleCreateAiMember,
+    handleCreateAiTemplateTemplate,
+    handleCreateHumanMember,
+    handleCreateInvitation,
+    handleDuplicateAiTemplate,
+    handleEditAiTemplate,
+    handleLogoutAll,
+    handleRemoveMember,
+    handleRevokeInvitation,
+    handleRevokeSession,
+    handleSaveTeamSettings,
+    handleStartNewAiTemplate,
+    handleToggleAiTemplate,
+    handleUpdateMemberRole,
+    handleUpdateAiTemplateTemplate,
+    selectedAiTemplateId,
+  } = useTeamSettingsContext();
+  const {
+    integrationConnections,
+    integrationFiles,
+    integrationFolderPath,
+    integrationForm,
+    integrationPreviewCount,
+    integrationPreviewCustomers,
+    integrationPreviewProjects,
+    integrationPreviewTasks,
+    integrationPreviewTickets,
+    selectedIntegration,
+    selectedIntegrationHealth,
+    selectedIntegrationId,
+    setIntegrationFolderPath,
+    setIntegrationForm,
+    handleCreateIntegration,
+    handleImportPreviewCustomer,
+    handleImportPreviewProject,
+    handleImportPreviewTicket,
+    handleRefreshIntegrationPreview,
+    handleSelectIntegrationId,
+    handleValidateIntegration,
+  } = useIntegrationsContext();
+  const {
+    projectsLeadCountByMemberId,
+    conciergeCountByMemberId,
+    importedCustomerExternalIds,
+    importedProjectExternalIds,
+    importedTicketExternalIds,
+    integrationAuditLogs,
+    mappedCustomers,
+    mappedProjects,
+    mappedTickets,
+  } = useDerivedContext();
+  const { navigateToCustomer, navigateToProject, navigateToTicket } = useNavigationContext();
 
-export function AdminWorkspaceSection({
-  busyAction,
-  createdTeam,
-  currentUser,
-  myTeamsCount,
-  teamSettingsForm,
-  userSessions,
-  teamMembers,
-  projectsLeadCountByMemberId,
-  conciergeCountByMemberId,
-  teamInvitations,
-  myInvitations,
-  teamAuditLogs,
-  myAuditLogs,
-  integrationForm,
-  integrationFolderPath,
-  canManageIntegrations,
-  integrationConnections,
-  selectedIntegrationId,
-  selectedIntegration,
-  integrationPreviewCount,
-  selectedIntegrationHealth,
-  integrationFiles,
-  integrationPreviewCustomers,
-  integrationPreviewProjects,
-  integrationPreviewTickets,
-  integrationPreviewTasks,
-  integrationAuditLogs,
-  importedCustomerExternalIds,
-  importedProjectExternalIds,
-  importedTicketExternalIds,
-  mappedCustomers,
-  mappedProjects,
-  mappedTickets,
-  currentProjectId,
-  currentProject,
-  humanMemberForm,
-  aiMemberForm,
-  aiTemplateEditorForm,
-  aiTemplateLibrary,
-  invitationForm,
-  aiTemplateOptions,
-  selectedAiTemplateId,
-  onTeamSettingsFormChange,
-  onHumanMemberFormChange,
-  onAiMemberFormChange,
-  onAiTemplateEditorFormChange,
-  onInvitationFormChange,
-  onIntegrationFolderPathChange,
-  onNavigateToCustomer,
-  onNavigateToProject,
-  onNavigateToTicket,
-  onSaveTeamSettings,
-  onRevokeSession,
-  onLogoutAll,
-  onUpdateMemberRole,
-  onRemoveMember,
-  onRevokeInvitation,
-  onAcceptInvitation,
-  onApplyAiTemplate,
-  onStartNewAiTemplate,
-  onDuplicateAiTemplate,
-  onEditAiTemplate,
-  onCreateHumanMember,
-  onCreateAiMember,
-  onCreateAiTemplateTemplate,
-  onUpdateAiTemplateTemplate,
-  onToggleAiTemplate,
-  onCreateInvitation,
-  onIntegrationFormChange,
-  onCreateIntegration,
-  onImportPreviewCustomer,
-  onImportPreviewProject,
-  onImportPreviewTicket,
-  onRefreshIntegrationPreview,
-  onRetryLatestIntegrationIssue,
-  onSelectIntegrationId,
-  onValidateIntegration,
-}: AdminWorkspaceSectionProps) {
   return (
     <>
       <TeamManagementPanel
@@ -195,41 +89,41 @@ export function AdminWorkspaceSection({
         aiTemplateLibrary={aiTemplateLibrary}
         aiTemplateOptions={aiTemplateOptions}
         busyAction={busyAction}
-        canManage={canManageIntegrations}
+        canManage={Boolean(currentTeamId)}
         humanMemberForm={humanMemberForm}
         invitationForm={invitationForm}
-        onAiMemberFormChange={onAiMemberFormChange}
-        onAiTemplateEditorFormChange={onAiTemplateEditorFormChange}
-        onApplyAiTemplate={onApplyAiTemplate}
-        onCreateAiMember={onCreateAiMember}
-        onCreateAiTemplateTemplate={onCreateAiTemplateTemplate}
-        onCreateHumanMember={onCreateHumanMember}
-        onCreateInvitation={onCreateInvitation}
-        onDuplicateAiTemplate={onDuplicateAiTemplate}
-        onEditAiTemplate={onEditAiTemplate}
-        onHumanMemberFormChange={onHumanMemberFormChange}
-        onInvitationFormChange={onInvitationFormChange}
-        onStartNewAiTemplate={onStartNewAiTemplate}
-        onToggleAiTemplate={onToggleAiTemplate}
-        onUpdateAiTemplateTemplate={onUpdateAiTemplateTemplate}
+        onAiMemberFormChange={setAiMemberForm}
+        onAiTemplateEditorFormChange={setAiTemplateEditorForm}
+        onApplyAiTemplate={handleApplyAiTemplate}
+        onCreateAiMember={handleCreateAiMember}
+        onCreateAiTemplateTemplate={handleCreateAiTemplateTemplate}
+        onCreateHumanMember={handleCreateHumanMember}
+        onCreateInvitation={handleCreateInvitation}
+        onDuplicateAiTemplate={handleDuplicateAiTemplate}
+        onEditAiTemplate={handleEditAiTemplate}
+        onHumanMemberFormChange={setHumanMemberForm}
+        onInvitationFormChange={setInvitationForm}
+        onStartNewAiTemplate={handleStartNewAiTemplate}
+        onToggleAiTemplate={handleToggleAiTemplate}
+        onUpdateAiTemplateTemplate={handleUpdateAiTemplateTemplate}
         selectedAiTemplateId={selectedAiTemplateId}
       />
 
       <TeamSettingsPanel
         busyAction={busyAction}
-        createdTeam={createdTeam}
+        createdTeam={currentTeam}
         currentUser={currentUser}
         myAuditLogs={myAuditLogs}
         myInvitations={myInvitations}
-        myTeamsCount={myTeamsCount}
-        onAcceptInvitation={onAcceptInvitation}
-        onLogoutAll={onLogoutAll}
-        onRemoveMember={onRemoveMember}
-        onRevokeInvitation={onRevokeInvitation}
-        onRevokeSession={onRevokeSession}
-        onSaveTeamSettings={onSaveTeamSettings}
-        onTeamSettingsFormChange={onTeamSettingsFormChange}
-        onUpdateMemberRole={onUpdateMemberRole}
+        myTeamsCount={teams.length}
+        onAcceptInvitation={handleAcceptInvitation}
+        onLogoutAll={handleLogoutAll}
+        onRemoveMember={handleRemoveMember}
+        onRevokeInvitation={handleRevokeInvitation}
+        onRevokeSession={handleRevokeSession}
+        onSaveTeamSettings={handleSaveTeamSettings}
+        onTeamSettingsFormChange={setTeamSettingsForm}
+        onUpdateMemberRole={handleUpdateMemberRole}
         projectsLeadCountByMemberId={projectsLeadCountByMemberId}
         conciergeCountByMemberId={conciergeCountByMemberId}
         teamAuditLogs={teamAuditLogs}
@@ -241,7 +135,7 @@ export function AdminWorkspaceSection({
 
       <IntegrationPanel
         busyAction={busyAction}
-        canManageIntegrations={canManageIntegrations}
+        canManageIntegrations={Boolean(currentTeamId)}
         integrationConnections={integrationConnections}
         integrationFiles={integrationFiles}
         integrationForm={integrationForm}
@@ -260,19 +154,28 @@ export function AdminWorkspaceSection({
         mappedTickets={mappedTickets}
         currentProjectId={currentProjectId}
         currentProject={currentProject}
-        onNavigateToCustomer={onNavigateToCustomer}
-        onNavigateToProject={onNavigateToProject}
-        onNavigateToTicket={onNavigateToTicket}
-        onCreateIntegration={onCreateIntegration}
-        onImportPreviewCustomer={onImportPreviewCustomer}
-        onImportPreviewProject={onImportPreviewProject}
-        onImportPreviewTicket={onImportPreviewTicket}
-        onIntegrationFolderPathChange={onIntegrationFolderPathChange}
-        onIntegrationFormChange={onIntegrationFormChange}
-        onRefreshIntegrationPreview={onRefreshIntegrationPreview}
-        onRetryLatestIntegrationIssue={onRetryLatestIntegrationIssue}
-        onSelectIntegrationId={onSelectIntegrationId}
-        onValidateIntegration={onValidateIntegration}
+        onNavigateToCustomer={navigateToCustomer}
+        onNavigateToProject={navigateToProject}
+        onNavigateToTicket={navigateToTicket}
+        onCreateIntegration={handleCreateIntegration}
+        onImportPreviewCustomer={handleImportPreviewCustomer}
+        onImportPreviewProject={handleImportPreviewProject}
+        onImportPreviewTicket={handleImportPreviewTicket}
+        onIntegrationFolderPathChange={setIntegrationFolderPath}
+        onIntegrationFormChange={setIntegrationForm}
+        onRefreshIntegrationPreview={handleRefreshIntegrationPreview}
+        onRetryLatestIntegrationIssue={() => {
+          if (
+            selectedIntegrationHealth
+            && (!selectedIntegrationHealth.isAuthenticated || !selectedIntegrationHealth.isReachable)
+          ) {
+            void handleValidateIntegration();
+            return;
+          }
+          void handleRefreshIntegrationPreview();
+        }}
+        onSelectIntegrationId={handleSelectIntegrationId}
+        onValidateIntegration={handleValidateIntegration}
         selectedIntegration={selectedIntegration}
         selectedIntegrationHealth={selectedIntegrationHealth}
         selectedIntegrationId={selectedIntegrationId}

@@ -1,51 +1,19 @@
-import type { RefObject } from 'react';
-import type { ChatMessage } from '../types';
+import { useAuthContext, useChatContext, useCustomersContext, useConversationsContext, useNavigationContext, useResourcesContext, useStatusContext, useTicketsContext } from '../workspaceContexts';
 
-type ChatPanelProps = {
-  isStreaming: boolean;
-  selectedProjectId: string;
-  selectedProjectName: string;
-  selectedCustomerId: string;
-  selectedCustomerName: string;
-  selectedTicketId: string;
-  selectedTicketTitle: string;
-  onSelectProjectContext: () => void;
-  onSelectCustomerContext: () => void;
-  onSelectTicketContext: () => void;
-  onStop: () => void;
-  scrollRef: RefObject<HTMLDivElement | null>;
-  messages: ChatMessage[];
-  displayedTexts: Record<string, string>;
-  input: string;
-  onInputChange: (value: string) => void;
-  onSubmit: () => void;
-  errorMessage: string | null;
-  onSyncConversationDraft: () => void;
-  onSyncTicketDraft: () => void;
-};
+export function ChatPanel() {
+  const { chatError, chatInput, displayedTexts, isStreaming, messages, scrollRef, setChatInput, handleSendMessage, handleStop } = useChatContext();
+  const { selectedProjectId, selectedProject } = useResourcesContext();
+  const { selectedCustomerId, selectedCustomer } = useCustomersContext();
+  const { selectedTicketId, selectedTicket } = useTicketsContext();
+  const { navigateToProject, navigateToCustomer, navigateToTicket } = useNavigationContext();
+  const { setCreateConversationForm } = useConversationsContext();
+  const { setCreateTicketForm } = useTicketsContext();
+  const { setFeedback } = useStatusContext();
 
-export function ChatPanel({
-  isStreaming,
-  selectedProjectId,
-  selectedProjectName,
-  selectedCustomerId,
-  selectedCustomerName,
-  selectedTicketId,
-  selectedTicketTitle,
-  onSelectProjectContext,
-  onSelectCustomerContext,
-  onSelectTicketContext,
-  onStop,
-  scrollRef,
-  messages,
-  displayedTexts,
-  input,
-  onInputChange,
-  onSubmit,
-  errorMessage,
-  onSyncConversationDraft,
-  onSyncTicketDraft,
-}: ChatPanelProps) {
+  const selectedProjectName = selectedProject?.name ?? '未选项目';
+  const selectedCustomerName = selectedCustomer?.displayName ?? '未选客户';
+  const selectedTicketTitle = selectedTicket?.title ?? '未选工单';
+
   return (
     <section className="panel panel-chat">
       <div className="chat-header">
@@ -62,7 +30,7 @@ export function ChatPanel({
                 className="entity-chip entity-chip-button"
                 disabled={!selectedProjectId}
                 type="button"
-                onClick={onSelectProjectContext}
+                onClick={() => selectedProjectId && navigateToProject(selectedProjectId)}
               >
                 <strong>项目</strong>
                 <span>{selectedProjectName}</span>
@@ -71,7 +39,7 @@ export function ChatPanel({
                 className="entity-chip entity-chip-button"
                 disabled={!selectedCustomerId}
                 type="button"
-                onClick={onSelectCustomerContext}
+                onClick={() => selectedCustomerId && navigateToCustomer(selectedCustomerId)}
               >
                 <strong>客户</strong>
                 <span>{selectedCustomerName}</span>
@@ -80,7 +48,7 @@ export function ChatPanel({
                 className="entity-chip entity-chip-button"
                 disabled={!selectedTicketId}
                 type="button"
-                onClick={onSelectTicketContext}
+                onClick={() => selectedTicketId && navigateToTicket(selectedTicketId)}
               >
                 <strong>工单</strong>
                 <span>{selectedTicketTitle}</span>
@@ -90,7 +58,7 @@ export function ChatPanel({
         </div>
 
         {isStreaming ? (
-          <button className="secondary-button" onClick={onStop} type="button">
+          <button className="secondary-button" onClick={handleStop} type="button">
             停止生成
           </button>
         ) : null}
@@ -124,26 +92,52 @@ export function ChatPanel({
         className="composer"
         onSubmit={event => {
           event.preventDefault();
-          onSubmit();
+          void handleSendMessage();
         }}
       >
         <textarea
           className="composer-input"
-          onChange={event => onInputChange(event.currentTarget.value)}
+          onChange={event => setChatInput(event.target.value)}
           placeholder="输入你的问题，例如：帮我设计一个客服机器人知识库问答流程。"
           rows={4}
-          value={input}
+          value={chatInput}
         />
 
         <div className="composer-actions">
           <span className="hint">
-            {errorMessage ? `请求失败: ${errorMessage}` : '聊天走 AI SDK，业务工作台走 OpenAPI 生成客户端'}
+            {chatError ? `请求失败: ${chatError}` : '聊天走 AI SDK，业务工作台走 OpenAPI 生成客户端'}
           </span>
           <div className="action-row">
-            <button className="secondary-button" type="button" onClick={onSyncConversationDraft}>
+            <button className="secondary-button" type="button" onClick={() => {
+              const draftMessage = chatInput.trim();
+              if (!draftMessage) {
+                setFeedback({ kind: 'error', text: '先输入一段聊天内容，再同步到会话草稿。' });
+                return;
+              }
+              setCreateConversationForm(current => ({
+                ...current,
+                customerId: current.customerId || (selectedCustomer?.id ?? ''),
+                customerDisplayName: current.customerDisplayName || (selectedCustomer?.displayName ?? ''),
+                customerEmail: current.customerEmail || (selectedCustomer?.email ?? ''),
+                initialMessage: draftMessage,
+              }));
+              setFeedback({ kind: 'success', text: '已把聊天内容同步到会话草稿。' });
+            }}>
               同步到会话草稿
             </button>
-            <button className="secondary-button" type="button" onClick={onSyncTicketDraft}>
+            <button className="secondary-button" type="button" onClick={() => {
+              const draftMessage = chatInput.trim();
+              if (!draftMessage) {
+                setFeedback({ kind: 'error', text: '先输入一段聊天内容，再同步到工单草稿。' });
+                return;
+              }
+              setCreateTicketForm(current => ({
+                ...current,
+                title: current.title || `${selectedCustomer?.displayName ?? '客户'}需求`,
+                summary: draftMessage,
+              }));
+              setFeedback({ kind: 'success', text: '已把聊天内容同步到工单草稿。' });
+            }}>
               同步到工单草稿
             </button>
             <button className="primary-button" disabled={isStreaming} type="submit">
