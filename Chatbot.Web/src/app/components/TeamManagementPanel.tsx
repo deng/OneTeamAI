@@ -1,4 +1,4 @@
-import { useState, type Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import {
   MemberRole,
   type CreateAiMemberRequest,
@@ -69,6 +69,16 @@ export function TeamManagementPanel({
   const [showHumanMemberForm, setShowHumanMemberForm] = useState(false);
   const [showAiMemberForm, setShowAiMemberForm] = useState(false);
   const [showInvitationForm, setShowInvitationForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    const prev = prevBusyRef.current;
+    if (busyAction === null) {
+      if (prev === 'create-human-member' && showHumanMemberForm) setShowHumanMemberForm(false);
+      if (prev === 'create-ai-member' && showAiMemberForm) setShowAiMemberForm(false);
+      if (prev === 'create-invitation' && showInvitationForm) setShowInvitationForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showHumanMemberForm, showAiMemberForm, showInvitationForm]);
 
   return (
     <>
@@ -130,7 +140,7 @@ export function TeamManagementPanel({
             className="secondary-button"
             disabled={busyAction !== null || !canManage}
             type="button"
-            onClick={() => { onCreateHumanMember(); setShowHumanMemberForm(false); }}
+            onClick={onCreateHumanMember}
           >
             {busyAction === 'create-human-member' ? '添加中...' : '添加真人成员'}
           </button>
@@ -249,7 +259,7 @@ export function TeamManagementPanel({
             className="secondary-button"
             disabled={busyAction !== null || !canManage}
             type="button"
-            onClick={() => { onCreateAiMember(); setShowAiMemberForm(false); }}
+            onClick={onCreateAiMember}
           >
             {busyAction === 'create-ai-member' ? '创建中...' : '创建 AI 员工'}
           </button>
@@ -660,7 +670,7 @@ export function TeamManagementPanel({
             className="secondary-button"
             disabled={busyAction !== null || !canManage}
             type="button"
-            onClick={() => { onCreateInvitation(); setShowInvitationForm(false); }}
+            onClick={onCreateInvitation}
           >
             {busyAction === 'create-invitation' ? '发送中...' : '发送邀请'}
           </button>

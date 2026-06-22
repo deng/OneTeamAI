@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthContext, useStatusContext, useTeamContext } from '../workspaceContexts';
 import { Modal } from './Modal';
 
@@ -17,6 +17,13 @@ export function TeamSection() {
     setTeamName,
   } = useTeamContext();
   const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-team' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
 
   return (
     <>
@@ -73,7 +80,7 @@ export function TeamSection() {
               className="secondary-button"
               disabled={busyAction !== null}
               type="button"
-              onClick={() => { handleCreateTeam(); setShowForm(false); }}
+              onClick={handleCreateTeam}
             >
               {busyAction === 'create-team' ? '创建中...' : '创建团队'}
             </button>

@@ -1,4 +1,4 @@
-import { useState, type Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import {
   type CustomerResponse,
   ExternalSystemType,
@@ -98,6 +98,13 @@ export function IntegrationPanel({
   onImportPreviewTicket,
 }: IntegrationPanelProps) {
   const [showIntegrationForm, setShowIntegrationForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showIntegrationForm && prevBusyRef.current === 'create-integration' && busyAction === null) {
+      setShowIntegrationForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showIntegrationForm]);
   const importedCustomerIdSet = new Set(importedCustomerExternalIds);
   const importedProjectIdSet = new Set(importedProjectExternalIds);
   const importedTicketIdSet = new Set(importedTicketExternalIds);
@@ -217,7 +224,7 @@ export function IntegrationPanel({
             className="secondary-button"
             disabled={busyAction !== null || !canManageIntegrations}
             type="button"
-            onClick={() => { onCreateIntegration(); setShowIntegrationForm(false); }}
+            onClick={onCreateIntegration}
           >
             {busyAction === 'create-integration' ? '创建中...' : '创建连接'}
           </button>

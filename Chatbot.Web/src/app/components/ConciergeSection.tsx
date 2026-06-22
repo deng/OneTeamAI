@@ -1,4 +1,4 @@
-import { useState, type Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import type {
   ConciergeAppResponse,
   ConversationSummaryResponse,
@@ -60,6 +60,13 @@ export function ConciergeSection({
   onSelectRelatedTicketId,
 }: ConciergeSectionProps) {
   const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-concierge' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
   return (
     <>
       <div className="panel-title panel-title-gap">坐台程序</div>
@@ -276,7 +283,7 @@ export function ConciergeSection({
           className="secondary-button"
           disabled={busyAction !== null}
           type="button"
-          onClick={() => { onCreateConciergeApp(); setShowForm(false); }}
+          onClick={onCreateConciergeApp}
         >
           {busyAction === 'create-concierge' ? '创建中...' : '创建坐台程序'}
         </button>

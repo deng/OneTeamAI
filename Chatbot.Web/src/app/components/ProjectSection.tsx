@@ -1,4 +1,4 @@
-import { useState, type Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import type {
   ConciergeAppResponse,
   ConversationSummaryResponse,
@@ -70,6 +70,13 @@ export function ProjectSection({
   onSelectProjectId,
 }: ProjectSectionProps) {
   const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-project' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
   return (
     <>
       <div className="panel-title panel-title-gap">项目</div>
@@ -121,7 +128,7 @@ export function ProjectSection({
           className="secondary-button"
           disabled={busyAction !== null}
           type="button"
-          onClick={() => { onCreateProject(); setShowForm(false); }}
+          onClick={onCreateProject}
         >
           {busyAction === 'create-project' ? '创建中...' : '创建项目'}
         </button>

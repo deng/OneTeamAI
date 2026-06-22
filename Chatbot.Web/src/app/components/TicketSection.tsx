@@ -1,4 +1,4 @@
-import { useState, type Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import {
   TicketPriority,
   type ConversationSummaryResponse,
@@ -77,6 +77,13 @@ export function TicketSection({
   onTicketDraftsChange,
 }: TicketSectionProps) {
   const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-ticket' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
   return (
     <>
       <div className="panel-title panel-title-gap">工单</div>
@@ -166,7 +173,7 @@ export function TicketSection({
           className="secondary-button"
           disabled={busyAction !== null || !selectedConversation || !createTicketForm.title?.trim()}
           type="button"
-          onClick={() => { onCreateTicket(); setShowForm(false); }}
+          onClick={onCreateTicket}
         >
           {busyAction === 'create-ticket' ? '创建中...' : '创建工单'}
         </button>

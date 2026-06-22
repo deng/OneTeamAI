@@ -1,4 +1,4 @@
-import { useState, type Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import {
   CustomerFollowUpStatus,
   type ConversationSummaryResponse,
@@ -59,12 +59,21 @@ export function CustomerSection({
   onSelectRelatedTicketId,
 }: CustomerSectionProps) {
   const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-customer' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
   return (
     <>
       <div className="panel-title panel-title-gap">客户</div>
-      <button className="secondary-button" type="button" onClick={() => setShowForm(true)}>
-        + 创建客户
-      </button>
+      {canManageCustomers ? (
+        <button className="secondary-button" type="button" onClick={() => setShowForm(true)}>
+          + 创建客户
+        </button>
+      ) : null}
 
       <Modal open={showForm} onClose={() => setShowForm(false)} title="创建客户">
         <label className="field">
@@ -168,7 +177,7 @@ export function CustomerSection({
           className="secondary-button"
           disabled={busyAction !== null}
           type="button"
-          onClick={() => { onCreateCustomer(); setShowForm(false); }}
+          onClick={onCreateCustomer}
         >
           {busyAction === 'create-customer' ? '创建中...' : '创建客户'}
         </button>

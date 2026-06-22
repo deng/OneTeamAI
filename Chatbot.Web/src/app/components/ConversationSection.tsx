@@ -1,4 +1,4 @@
-import { useState, type Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import {
   TicketPriority,
   type ConversationDetailResponse,
@@ -62,6 +62,13 @@ export function ConversationSection({
   onSelectRelatedTicketId,
 }: ConversationSectionProps) {
   const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-conversation' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
   return (
     <>
       <div className="panel-title panel-title-gap">会话</div>
@@ -148,7 +155,7 @@ export function ConversationSection({
           className="secondary-button"
           disabled={busyAction !== null || !selectedCustomer || !createConversationForm.initialMessage?.trim()}
           type="button"
-          onClick={() => { onCreateConversation(); setShowForm(false); }}
+          onClick={onCreateConversation}
         >
           {busyAction === 'create-conversation' ? '创建中...' : '创建会话'}
         </button>
