@@ -24,7 +24,7 @@ fi
 echo "Starting Chatbot.Api on http://127.0.0.1:5078 ..."
 (
   cd "$API_DIR"
-  dotnet run --no-launch-profile
+  ASPNETCORE_ENVIRONMENT=Development ASPNETCORE_URLS=http://127.0.0.1:5078 dotnet run --no-launch-profile
 ) &
 API_PID=$!
 
