@@ -8,5 +8,6 @@ dist/
 *.db
 *.db-shm
 *.db-wal
+*.tsbuildinfo
 backups/
 graphify-out/
