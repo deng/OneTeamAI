@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import type {
   ConciergeAppResponse,
   ConversationSummaryResponse,
@@ -9,6 +9,7 @@ import type {
   TicketResponse,
   UpdateConciergeAppRequest,
 } from '../../generated/api';
+import { Modal } from './Modal';
 import { ConciergePanel } from './ConciergePanel';
 
 type ConciergeSectionProps = {
@@ -58,11 +59,24 @@ export function ConciergeSection({
   onSelectRelatedProjectId,
   onSelectRelatedTicketId,
 }: ConciergeSectionProps) {
+  const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-concierge' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
   return (
     <>
       <div className="panel-title panel-title-gap">坐台程序</div>
-      <div className="form-card">
-        <div className="form-card-title">创建坐台程序</div>
+      {canManageConciergeApps ? (
+        <button className="secondary-button" type="button" onClick={() => setShowForm(true)}>
+          + 创建坐台程序
+        </button>
+      ) : null}
+
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="创建坐台程序">
         <label className="field">
           <span>名称</span>
           <input
@@ -273,7 +287,7 @@ export function ConciergeSection({
         >
           {busyAction === 'create-concierge' ? '创建中...' : '创建坐台程序'}
         </button>
-      </div>
+      </Modal>
 
       <ConciergePanel
         conciergeApps={conciergeApps}

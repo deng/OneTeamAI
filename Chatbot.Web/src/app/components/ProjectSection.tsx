@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import type {
   ConciergeAppResponse,
   ConversationSummaryResponse,
@@ -9,6 +9,7 @@ import type {
   TicketResponse,
   UpdateProjectRequest,
 } from '../../generated/api';
+import { Modal } from './Modal';
 import { ProjectPanel } from './ProjectPanel';
 
 type ProjectSectionProps = {
@@ -68,11 +69,24 @@ export function ProjectSection({
   onSelectRelatedTicketId,
   onSelectProjectId,
 }: ProjectSectionProps) {
+  const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-project' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
   return (
     <>
       <div className="panel-title panel-title-gap">项目</div>
-      <div className="form-card">
-        <div className="form-card-title">创建项目</div>
+      {canManageProjects ? (
+        <button className="secondary-button" type="button" onClick={() => setShowForm(true)}>
+          + 创建项目
+        </button>
+      ) : null}
+
+      <Modal open={showForm} onClose={() => setShowForm(false)} title="创建项目">
         <label className="field">
           <span>项目名称</span>
           <input
@@ -118,7 +132,7 @@ export function ProjectSection({
         >
           {busyAction === 'create-project' ? '创建中...' : '创建项目'}
         </button>
-      </div>
+      </Modal>
 
       <ProjectPanel
         projects={projects}

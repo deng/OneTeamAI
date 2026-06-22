@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useEffect, useRef, useState, type Dispatch, SetStateAction } from 'react';
 import {
   type CustomerResponse,
   ExternalSystemType,
@@ -18,6 +18,7 @@ import {
   formatNullableText,
 } from '../formatters';
 import type { AuditLogItem } from '../types';
+import { Modal } from './Modal';
 
 type IntegrationPanelProps = {
   integrationForm: CreateIntegrationConnectionRequest;
@@ -96,6 +97,14 @@ export function IntegrationPanel({
   onImportPreviewProject,
   onImportPreviewTicket,
 }: IntegrationPanelProps) {
+  const [showIntegrationForm, setShowIntegrationForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showIntegrationForm && prevBusyRef.current === 'create-integration' && busyAction === null) {
+      setShowIntegrationForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showIntegrationForm]);
   const importedCustomerIdSet = new Set(importedCustomerExternalIds);
   const importedProjectIdSet = new Set(importedProjectExternalIds);
   const importedTicketIdSet = new Set(importedTicketExternalIds);
@@ -133,90 +142,93 @@ export function IntegrationPanel({
           <strong>连接管理</strong>
           <span>优先接入协作资产系统与业务管理系统，当前首批适配 Nextcloud 和 ERPNext。</span>
         </div>
-        <div className="entity-card">
-          <div className="entity-card-title">创建连接</div>
-          <div className="entity-card-body">
-            <label className="field">
-              <span>系统类型</span>
-              <select
-                className="text-input"
-                disabled={busyAction !== null}
-                value={integrationForm.externalSystemType ?? ExternalSystemType.NUMBER_1}
-                onChange={event => {
-                  const nextType = Number(event.currentTarget.value) as CreateIntegrationConnectionRequest['externalSystemType'];
-                  onIntegrationFormChange(current => ({
-                    ...current,
-                    externalSystemType: nextType,
-                    name:
-                      nextType === ExternalSystemType.NUMBER_2
-                        ? 'ERPNext 业务系统'
-                        : 'Nextcloud 主协作空间',
-                    baseUrl:
-                      nextType === ExternalSystemType.NUMBER_2
-                        ? 'https://erpnext.example.com'
-                        : 'https://nextcloud.example.com',
-                    authConfig:
-                      nextType === ExternalSystemType.NUMBER_2
-                        ? '{"apiKey":"demo-key","apiSecret":"demo-secret"}'
-                        : '{"username":"demo","appPassword":"demo-token"}',
-                  }));
-                }}
-              >
-                <option value={ExternalSystemType.NUMBER_1}>Nextcloud</option>
-                <option value={ExternalSystemType.NUMBER_2}>ERPNext</option>
-              </select>
-            </label>
-            <label className="field">
-              <span>连接名称</span>
-              <input
-                className="text-input"
-                value={integrationForm.name ?? ''}
-                onChange={event =>
-                  onIntegrationFormChange(current => ({ ...current, name: event.currentTarget.value }))
-                }
-              />
-            </label>
-            <label className="field">
-              <span>Base URL</span>
-              <input
-                className="text-input"
-                value={integrationForm.baseUrl ?? ''}
-                onChange={event =>
-                  onIntegrationFormChange(current => ({ ...current, baseUrl: event.currentTarget.value }))
-                }
-              />
-            </label>
-            <label className="field">
-              <span>认证配置</span>
-              <textarea
-                className="text-area"
-                rows={3}
-                value={integrationForm.authConfig ?? ''}
-                onChange={event =>
-                  onIntegrationFormChange(current => ({ ...current, authConfig: event.currentTarget.value }))
-                }
-              />
-            </label>
-            <label className="checkbox-field">
-              <input
-                checked={integrationForm.isEnabled ?? true}
-                type="checkbox"
-                onChange={event =>
-                  onIntegrationFormChange(current => ({ ...current, isEnabled: event.currentTarget.checked }))
-                }
-              />
-              启用该连接
-            </label>
-            <button
-              className="secondary-button"
-              disabled={busyAction !== null || !canManageIntegrations}
-              type="button"
-              onClick={onCreateIntegration}
+        {canManageIntegrations ? (
+          <button className="secondary-button" type="button" onClick={() => setShowIntegrationForm(true)}>
+            + 创建连接
+          </button>
+        ) : null}
+
+        <Modal open={showIntegrationForm} onClose={() => setShowIntegrationForm(false)} title="创建连接">
+          <label className="field">
+            <span>系统类型</span>
+            <select
+              className="text-input"
+              disabled={busyAction !== null}
+              value={integrationForm.externalSystemType ?? ExternalSystemType.NUMBER_1}
+              onChange={event => {
+                const nextType = Number(event.currentTarget.value) as CreateIntegrationConnectionRequest['externalSystemType'];
+                onIntegrationFormChange(current => ({
+                  ...current,
+                  externalSystemType: nextType,
+                  name:
+                    nextType === ExternalSystemType.NUMBER_2
+                      ? 'ERPNext 业务系统'
+                      : 'Nextcloud 主协作空间',
+                  baseUrl:
+                    nextType === ExternalSystemType.NUMBER_2
+                      ? 'https://erpnext.example.com'
+                      : 'https://nextcloud.example.com',
+                  authConfig:
+                    nextType === ExternalSystemType.NUMBER_2
+                      ? '{"apiKey":"demo-key","apiSecret":"demo-secret"}'
+                      : '{"username":"demo","appPassword":"demo-token"}',
+                }));
+              }}
             >
-              {busyAction === 'create-integration' ? '创建中...' : '创建连接'}
-            </button>
-          </div>
-        </div>
+              <option value={ExternalSystemType.NUMBER_1}>Nextcloud</option>
+              <option value={ExternalSystemType.NUMBER_2}>ERPNext</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>连接名称</span>
+            <input
+              className="text-input"
+              value={integrationForm.name ?? ''}
+              onChange={event =>
+                onIntegrationFormChange(current => ({ ...current, name: event.currentTarget.value }))
+              }
+            />
+          </label>
+          <label className="field">
+            <span>Base URL</span>
+            <input
+              className="text-input"
+              value={integrationForm.baseUrl ?? ''}
+              onChange={event =>
+                onIntegrationFormChange(current => ({ ...current, baseUrl: event.currentTarget.value }))
+              }
+            />
+          </label>
+          <label className="field">
+            <span>认证配置</span>
+            <textarea
+              className="text-area"
+              rows={3}
+              value={integrationForm.authConfig ?? ''}
+              onChange={event =>
+                onIntegrationFormChange(current => ({ ...current, authConfig: event.currentTarget.value }))
+              }
+            />
+          </label>
+          <label className="checkbox-field">
+            <input
+              checked={integrationForm.isEnabled ?? true}
+              type="checkbox"
+              onChange={event =>
+                onIntegrationFormChange(current => ({ ...current, isEnabled: event.currentTarget.checked }))
+              }
+            />
+            启用该连接
+          </label>
+          <button
+            className="secondary-button"
+            disabled={busyAction !== null || !canManageIntegrations}
+            type="button"
+            onClick={onCreateIntegration}
+          >
+            {busyAction === 'create-integration' ? '创建中...' : '创建连接'}
+          </button>
+        </Modal>
         <div className="entity-card">
           <div className="entity-card-title">连接概览</div>
           {integrationConnections.length > 0 ? (

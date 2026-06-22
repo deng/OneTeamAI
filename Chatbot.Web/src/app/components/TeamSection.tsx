@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
 import { useAuthContext, useStatusContext, useTeamContext } from '../workspaceContexts';
+import { Modal } from './Modal';
 
 export function TeamSection() {
   const { busyAction } = useStatusContext();
@@ -14,6 +16,14 @@ export function TeamSection() {
     setTeamDescription,
     setTeamName,
   } = useTeamContext();
+  const [showForm, setShowForm] = useState(false);
+  const prevBusyRef = useRef(busyAction);
+  useEffect(() => {
+    if (showForm && prevBusyRef.current === 'create-team' && busyAction === null) {
+      setShowForm(false);
+    }
+    prevBusyRef.current = busyAction;
+  }, [busyAction, showForm]);
 
   return (
     <>
@@ -44,8 +54,11 @@ export function TeamSection() {
             </div>
           </div>
 
-          <div className="form-card">
-            <div className="form-card-title">创建团队</div>
+          <button className="secondary-button" type="button" onClick={() => setShowForm(true)}>
+            + 创建团队
+          </button>
+
+          <Modal open={showForm} onClose={() => setShowForm(false)} title="创建团队">
             <label className="field">
               <span>团队名称</span>
               <input
@@ -71,7 +84,7 @@ export function TeamSection() {
             >
               {busyAction === 'create-team' ? '创建中...' : '创建团队'}
             </button>
-          </div>
+          </Modal>
         </div>
       ) : (
         <span className="entity-placeholder">登录后可以创建和切换团队。</span>
