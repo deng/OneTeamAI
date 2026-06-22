@@ -542,10 +542,9 @@ export function AppWorkspace() {
     <div className="shell">
       <header className="hero">
         <p className="eyebrow">AI Virtual Team Workspace</p>
-        <h1>重新接回工作台主链</h1>
+        <h1>虚拟团队工作台</h1>
         <p className="lede">
-          当前版本已经恢复登录、团队、项目、坐台程序和聊天主链。后续会继续在现有组件和 hooks
-          上，把客户、会话、工单和多智能体协作逐步接回去。
+          管理团队、项目、客户、工单和会话，与 AI 智能体高效协作。
         </p>
       </header>
 
