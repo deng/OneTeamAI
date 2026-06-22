@@ -1,47 +1,19 @@
-import type { Dispatch, SetStateAction } from 'react';
-import type { HealthResponse, UserResponse } from '../../generated/api';
-import { formatNullableText } from '../formatters';
-import type { Feedback } from '../types';
+import { useAuthContext, useStatusContext } from '../workspaceContexts';
 
-type RegisterForm = {
-  email: string;
-  password: string;
-  displayName: string;
-  companyName: string;
-};
+export function AuthSection() {
+  const { busyAction, feedback } = useStatusContext();
+  const {
+    currentUser,
+    health,
+    loginForm,
+    registerForm,
+    handleLogin,
+    handleLogout,
+    handleRegister,
+    setLoginForm,
+    setRegisterForm,
+  } = useAuthContext();
 
-type LoginForm = {
-  email: string;
-  password: string;
-};
-
-type AuthSectionProps = {
-  busyAction: string | null;
-  currentUser: UserResponse | null;
-  feedback: Feedback | null;
-  health: HealthResponse | null;
-  loginForm: LoginForm;
-  registerForm: RegisterForm;
-  onLogin: () => void;
-  onLogout: () => void;
-  onRegister: () => void;
-  onLoginFormChange: Dispatch<SetStateAction<LoginForm>>;
-  onRegisterFormChange: Dispatch<SetStateAction<RegisterForm>>;
-};
-
-export function AuthSection({
-  busyAction,
-  currentUser,
-  feedback,
-  health,
-  loginForm,
-  registerForm,
-  onLogin,
-  onLogout,
-  onRegister,
-  onLoginFormChange,
-  onRegisterFormChange,
-}: AuthSectionProps) {
   return (
     <>
       <div className="panel-title">系统状态</div>
@@ -52,7 +24,7 @@ export function AuthSection({
       {health ? (
         <div className="meta-item">
           <span>健康状态</span>
-          <strong>{formatNullableText(health.status, '未知')}</strong>
+          <strong>{health.status ?? '未知'}</strong>
         </div>
       ) : (
         <span className="entity-placeholder">还没有获取到健康检查信息。</span>
@@ -70,14 +42,14 @@ export function AuthSection({
         <div className="entity-card">
           <div className="entity-card-title">当前用户</div>
           <div className="entity-card-body">
-            <strong>{formatNullableText(currentUser.displayName, '未命名用户')}</strong>
-            <span>{formatNullableText(currentUser.email)}</span>
-            <span>公司：{formatNullableText(currentUser.companyName, '未设置')}</span>
+            <strong>{currentUser.displayName ?? '未命名用户'}</strong>
+            <span>{currentUser.email ?? ''}</span>
+            <span>公司：{currentUser.companyName ?? '未设置'}</span>
             <button
               className="secondary-button"
               disabled={busyAction !== null}
               type="button"
-              onClick={onLogout}
+              onClick={handleLogout}
             >
               {busyAction === 'logout' ? '退出中...' : '退出登录'}
             </button>
@@ -92,8 +64,8 @@ export function AuthSection({
               <input
                 className="text-input"
                 value={registerForm.email}
-                onChange={event =>
-                  onRegisterFormChange(current => ({ ...current, email: event.currentTarget.value }))
+                onChange={e =>
+                  setRegisterForm({ ...registerForm, email: e.target.value })
                 }
               />
             </label>
@@ -103,8 +75,8 @@ export function AuthSection({
                 className="text-input"
                 type="password"
                 value={registerForm.password}
-                onChange={event =>
-                  onRegisterFormChange(current => ({ ...current, password: event.currentTarget.value }))
+                onChange={e =>
+                  setRegisterForm({ ...registerForm, password: e.target.value })
                 }
               />
             </label>
@@ -113,8 +85,8 @@ export function AuthSection({
               <input
                 className="text-input"
                 value={registerForm.displayName}
-                onChange={event =>
-                  onRegisterFormChange(current => ({ ...current, displayName: event.currentTarget.value }))
+                onChange={e =>
+                  setRegisterForm({ ...registerForm, displayName: e.target.value })
                 }
               />
             </label>
@@ -123,8 +95,8 @@ export function AuthSection({
               <input
                 className="text-input"
                 value={registerForm.companyName}
-                onChange={event =>
-                  onRegisterFormChange(current => ({ ...current, companyName: event.currentTarget.value }))
+                onChange={e =>
+                  setRegisterForm({ ...registerForm, companyName: e.target.value })
                 }
               />
             </label>
@@ -132,7 +104,7 @@ export function AuthSection({
               className="secondary-button"
               disabled={busyAction !== null}
               type="button"
-              onClick={onRegister}
+              onClick={handleRegister}
             >
               {busyAction === 'register' ? '提交中...' : '注册并登录'}
             </button>
@@ -145,8 +117,8 @@ export function AuthSection({
               <input
                 className="text-input"
                 value={loginForm.email}
-                onChange={event =>
-                  onLoginFormChange(current => ({ ...current, email: event.currentTarget.value }))
+                onChange={e =>
+                  setLoginForm({ ...loginForm, email: e.target.value })
                 }
               />
             </label>
@@ -156,8 +128,8 @@ export function AuthSection({
                 className="text-input"
                 type="password"
                 value={loginForm.password}
-                onChange={event =>
-                  onLoginFormChange(current => ({ ...current, password: event.currentTarget.value }))
+                onChange={e =>
+                  setLoginForm({ ...loginForm, password: e.target.value })
                 }
               />
             </label>
@@ -165,7 +137,7 @@ export function AuthSection({
               className="secondary-button"
               disabled={busyAction !== null}
               type="button"
-              onClick={onLogin}
+              onClick={handleLogin}
             >
               {busyAction === 'login' ? '登录中...' : '登录'}
             </button>

@@ -1,33 +1,20 @@
-import { formatNullableText } from '../formatters';
-import type { TeamSummaryResponse, UserResponse } from '../../generated/api';
+import { useAuthContext, useStatusContext, useTeamContext } from '../workspaceContexts';
 
-type TeamSectionProps = {
-  busyAction: string | null;
-  currentTeam: TeamSummaryResponse | null;
-  currentTeamId: string;
-  currentUser: UserResponse | null;
-  teamDescription: string;
-  teamName: string;
-  teams: TeamSummaryResponse[];
-  onCreateTeam: () => void;
-  onCurrentTeamIdChange: (teamId: string) => void;
-  onTeamDescriptionChange: (value: string) => void;
-  onTeamNameChange: (value: string) => void;
-};
+export function TeamSection() {
+  const { busyAction } = useStatusContext();
+  const { currentUser } = useAuthContext();
+  const {
+    currentTeam,
+    currentTeamId,
+    teamDescription,
+    teamName,
+    teams,
+    handleCreateTeam,
+    setCurrentTeamId,
+    setTeamDescription,
+    setTeamName,
+  } = useTeamContext();
 
-export function TeamSection({
-  busyAction,
-  currentTeam,
-  currentTeamId,
-  currentUser,
-  teamDescription,
-  teamName,
-  teams,
-  onCreateTeam,
-  onCurrentTeamIdChange,
-  onTeamDescriptionChange,
-  onTeamNameChange,
-}: TeamSectionProps) {
   return (
     <>
       <div className="panel-title panel-title-gap">团队</div>
@@ -40,7 +27,7 @@ export function TeamSection({
               <select
                 className="text-input"
                 value={currentTeamId}
-                onChange={event => onCurrentTeamIdChange(event.currentTarget.value)}
+                onChange={e => setCurrentTeamId(e.target.value)}
               >
                 <option value="">暂未选择</option>
                 {teams.map(team => (
@@ -52,8 +39,8 @@ export function TeamSection({
             </label>
             <div className="mini-meta">
               <span>可访问团队数：{teams.length}</span>
-              <span>团队说明：{formatNullableText(currentTeam?.description, '未设置')}</span>
-              <span>品牌：{formatNullableText(currentTeam?.brandName, '未设置')}</span>
+              <span>团队说明：{currentTeam?.description ?? '未设置'}</span>
+              <span>品牌：{currentTeam?.brandName ?? '未设置'}</span>
             </div>
           </div>
 
@@ -64,7 +51,7 @@ export function TeamSection({
               <input
                 className="text-input"
                 value={teamName}
-                onChange={event => onTeamNameChange(event.currentTarget.value)}
+                onChange={e => setTeamName(e.target.value)}
               />
             </label>
             <label className="field">
@@ -73,14 +60,14 @@ export function TeamSection({
                 className="text-area"
                 rows={3}
                 value={teamDescription}
-                onChange={event => onTeamDescriptionChange(event.currentTarget.value)}
+                onChange={e => setTeamDescription(e.target.value)}
               />
             </label>
             <button
               className="secondary-button"
               disabled={busyAction !== null}
               type="button"
-              onClick={onCreateTeam}
+              onClick={handleCreateTeam}
             >
               {busyAction === 'create-team' ? '创建中...' : '创建团队'}
             </button>
