@@ -65,7 +65,7 @@ export function LoginPage() {
             <input
               className="text-input"
               value={loginForm.email}
-              onChange={e => setLoginForm(f => ({ ...f, email: e.currentTarget.value }))}
+              onChange={e => setLoginForm(f => ({ ...f, email: e.target.value }))}
             />
           </label>
           <label className="field">
@@ -74,7 +74,7 @@ export function LoginPage() {
               className="text-input"
               type="password"
               value={loginForm.password}
-              onChange={e => setLoginForm(f => ({ ...f, password: e.currentTarget.value }))}
+              onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))}
             />
           </label>
           <button
@@ -94,7 +94,7 @@ export function LoginPage() {
             <input
               className="text-input"
               value={registerForm.email}
-              onChange={e => setRegisterForm(f => ({ ...f, email: e.currentTarget.value }))}
+              onChange={e => setRegisterForm(f => ({ ...f, email: e.target.value }))}
             />
           </label>
           <label className="field">
@@ -103,7 +103,7 @@ export function LoginPage() {
               className="text-input"
               type="password"
               value={registerForm.password}
-              onChange={e => setRegisterForm(f => ({ ...f, password: e.currentTarget.value }))}
+              onChange={e => setRegisterForm(f => ({ ...f, password: e.target.value }))}
             />
           </label>
           <label className="field">
@@ -111,7 +111,7 @@ export function LoginPage() {
             <input
               className="text-input"
               value={registerForm.displayName}
-              onChange={e => setRegisterForm(f => ({ ...f, displayName: e.currentTarget.value }))}
+              onChange={e => setRegisterForm(f => ({ ...f, displayName: e.target.value }))}
             />
           </label>
           <label className="field">
@@ -119,7 +119,7 @@ export function LoginPage() {
             <input
               className="text-input"
               value={registerForm.companyName}
-              onChange={e => setRegisterForm(f => ({ ...f, companyName: e.currentTarget.value }))}
+              onChange={e => setRegisterForm(f => ({ ...f, companyName: e.target.value }))}
             />
           </label>
           <button
