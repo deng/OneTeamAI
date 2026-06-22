@@ -1,5 +1,6 @@
 import { useAuthContext, useStatusContext, useTeamContext, useResourcesContext, useCustomersContext, useConversationsContext, useTicketsContext, useWorkflowsContext, useNavigationContext } from '../workspaceContexts';
 import { CustomerOpsSection } from './CustomerOpsSection';
+import { EntityNavigator } from './EntityNavigator';
 import { ProjectOpsSection } from './ProjectOpsSection';
 
 export function BusinessWorkspaceSection() {
@@ -99,6 +100,24 @@ export function BusinessWorkspaceSection() {
 
   return (
     <>
+      <EntityNavigator
+        projects={projects}
+        conciergeApps={conciergeApps}
+        customers={customers}
+        conversations={conversations}
+        tickets={tickets}
+        selectedProjectId={selectedProjectId}
+        selectedConciergeAppId={selectedConciergeAppId}
+        selectedCustomerId={selectedCustomerId}
+        selectedConversationId={selectedConversationId}
+        selectedTicketId={selectedTicketId}
+        onSelectProject={navigateToProject}
+        onSelectConciergeApp={navigateToConciergeApp}
+        onSelectCustomer={navigateToCustomer}
+        onSelectConversation={navigateToConversation}
+        onSelectTicket={navigateToTicket}
+      />
+
       <ProjectOpsSection
         busyAction={busyAction}
         canManage={Boolean(currentTeamId)}
