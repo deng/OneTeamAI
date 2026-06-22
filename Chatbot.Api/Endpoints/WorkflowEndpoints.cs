@@ -390,7 +390,7 @@ partial class Program
             }
 
             var workflows = await query
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderByDescending(x => x.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(workflows.Select(ToAgentWorkflowResponse).ToList());

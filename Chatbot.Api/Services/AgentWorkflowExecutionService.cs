@@ -153,7 +153,7 @@ public sealed class AgentWorkflowExecutionService(
                 break;
             case "conversation.summary":
             case "conversation.list":
-                var latestMessage = conversation.Messages.OrderByDescending(x => x.CreatedAt).FirstOrDefault();
+                var latestMessage = conversation.Messages.OrderByDescending(x => x.CreatedAtMs).FirstOrDefault();
                 log.OutputSummary =
                     $"已读取会话，共 {conversation.Messages.Count} 条消息；最新消息：{latestMessage?.Content ?? "暂无内容"}。";
                 break;
@@ -322,7 +322,7 @@ public sealed class AgentWorkflowExecutionService(
         }
 
         var latestMessage = conversation.Messages
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.CreatedAtMs)
             .FirstOrDefault();
         log.OutputSummary =
             $"已读取会话上下文，共 {conversation.Messages.Count} 条消息；最新消息：{latestMessage?.Content ?? "暂无内容"}。";
@@ -445,7 +445,7 @@ public sealed class AgentWorkflowExecutionService(
 
     private static string EnrichConversationStepOutputSummary(AgentWorkflowStep step, Conversation conversation)
     {
-        var latestMessage = conversation.Messages.OrderByDescending(x => x.CreatedAt).FirstOrDefault()?.Content ?? "暂无消息";
+        var latestMessage = conversation.Messages.OrderByDescending(x => x.CreatedAtMs).FirstOrDefault()?.Content ?? "暂无消息";
         return $"{step.OutputSummary} 当前会话最新消息：{latestMessage}。";
     }
 
@@ -479,7 +479,7 @@ public sealed class AgentWorkflowExecutionService(
     private static string BuildTicketContext(Ticket ticket)
     {
         var latestConversationMessage = ticket.Conversation?.Messages
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.CreatedAtMs)
             .Select(x => x.Content)
             .FirstOrDefault();
         return string.Join(
@@ -500,7 +500,7 @@ public sealed class AgentWorkflowExecutionService(
     private static string BuildConversationContext(Conversation conversation)
     {
         var latestMessage = conversation.Messages
-            .OrderByDescending(x => x.CreatedAt)
+            .OrderByDescending(x => x.CreatedAtMs)
             .Select(x => x.Content)
             .FirstOrDefault();
         return string.Join(

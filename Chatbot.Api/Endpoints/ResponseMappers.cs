@@ -183,7 +183,7 @@ partial class Program
             ticket.AssignedMemberId,
             ticket.AssignedMember?.DisplayName,
             ticket.Activities
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderByDescending(x => x.CreatedAtMs)
                 .Select(ToTicketActivityResponse)
                 .ToList());
 
@@ -268,7 +268,7 @@ partial class Program
                     step.Status,
                     step.ExecutedAt,
                     step.ExecutionLogs
-                        .OrderBy(log => log.CreatedAt)
+                        .OrderBy(log => log.CreatedAtMs)
                         .Select(log => new AgentExecutionLogResponse(
                             log.Id,
                             log.MemberId,

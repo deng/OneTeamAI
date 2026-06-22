@@ -107,7 +107,7 @@ partial class Program
             var projects = await dbContext.Projects
                 .Include(project => project.ProjectMembers)
                 .Where(project => project.TeamId == teamId)
-                .OrderBy(project => project.CreatedAt)
+                .OrderBy(project => project.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             var projectIds = projects.Select(project => project.Id).ToList();

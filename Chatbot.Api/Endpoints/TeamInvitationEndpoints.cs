@@ -109,7 +109,7 @@ partial class Program
                 .Where(x => x.TeamId == teamId)
                 .Include(x => x.Team)
                 .Include(x => x.InvitedByUser)
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderByDescending(x => x.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(invitations.Select(ToInvitationResponse).ToList());
@@ -136,7 +136,7 @@ partial class Program
                 .Where(x => x.Email == currentUser.Email && x.Status == InvitationStatus.Pending)
                 .Include(x => x.Team)
                 .Include(x => x.InvitedByUser)
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderByDescending(x => x.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             await ExpirePendingInvitationsAsync(dbContext, cancellationToken);

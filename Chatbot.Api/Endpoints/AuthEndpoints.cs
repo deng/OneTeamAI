@@ -147,7 +147,7 @@ partial class Program
 
             var sessions = await dbContext.UserSessions
                 .Where(x => x.UserId == currentSession.UserId)
-                .OrderByDescending(x => x.CreatedAt)
+                .OrderByDescending(x => x.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(sessions.Select(session => ToUserSessionResponse(session, currentSession.Id)).ToList());

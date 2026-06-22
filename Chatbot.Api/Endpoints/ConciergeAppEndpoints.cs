@@ -100,7 +100,7 @@ partial class Program
 
             var apps = await dbContext.ConciergeApps
                 .Where(appEntity => appEntity.TeamId == teamId)
-                .OrderBy(appEntity => appEntity.CreatedAt)
+                .OrderBy(appEntity => appEntity.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(apps.Select(ToConciergeAppResponse).ToList());
