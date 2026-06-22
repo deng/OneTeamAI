@@ -57,7 +57,7 @@ export function LoginPage() {
         </div>
       ) : null}
 
-      <div className="setup-stack" style={{ maxWidth: 480, margin: '0 auto' }}>
+      <div className="setup-stack setup-stack-centered">
         <div className="form-card">
           <div className="form-card-title">登录</div>
           <label className="field">
