@@ -24,7 +24,7 @@ partial class Program
                 .Where(ticket => ticket.TeamId == teamId)
                 .Include(ticket => ticket.Customer)
                 .Include(ticket => ticket.AssignedMember)
-                .OrderByDescending(ticket => ticket.CreatedAt)
+                .OrderByDescending(ticket => ticket.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             var result = tickets.Select(ToTicketResponse).ToList();

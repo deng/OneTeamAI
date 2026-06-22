@@ -247,7 +247,7 @@ partial class Program
             var logs = await dbContext.AuditLogs
                 .Where(log => log.TeamId == teamId)
                 .Include(log => log.User)
-                .OrderByDescending(log => log.CreatedAt)
+                .OrderByDescending(log => log.CreatedAtMs)
                 .Take(limit)
                 .ToListAsync(cancellationToken);
 

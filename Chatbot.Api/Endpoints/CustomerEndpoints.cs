@@ -186,7 +186,7 @@ partial class Program
 
             var customers = await dbContext.Customers
                 .Where(customer => customer.TeamId == teamId)
-                .OrderBy(customer => customer.CreatedAt)
+                .OrderBy(customer => customer.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             return Results.Ok(customers.Select(ToCustomerResponse).ToList());

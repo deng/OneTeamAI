@@ -166,7 +166,7 @@ partial class Program
                 .Where(conversation => conversation.ConciergeAppId == conciergeAppId)
                 .Include(conversation => conversation.Customer)
                 .Include(conversation => conversation.Messages)
-                .OrderByDescending(conversation => conversation.CreatedAt)
+                .OrderByDescending(conversation => conversation.CreatedAtMs)
                 .ToListAsync(cancellationToken);
 
             var result = conversations.Select(conversation => new ConversationSummaryResponse(
@@ -178,7 +178,7 @@ partial class Program
                 conversation.Status,
                 conversation.Messages.Count,
                 conversation.Messages
-                    .OrderByDescending(message => message.CreatedAt)
+                    .OrderByDescending(message => message.CreatedAtMs)
                     .Select(message => message.Content)
                     .FirstOrDefault(),
                 conversation.CreatedAt)).ToList();
@@ -227,7 +227,7 @@ partial class Program
                         conversation.Customer.Email),
                 conversation.Status,
                 conversation.Messages
-                    .OrderBy(message => message.CreatedAt)
+                    .OrderBy(message => message.CreatedAtMs)
                     .Select(message => new ConversationMessageResponse(
                         message.Id,
                         message.ParticipantType,
