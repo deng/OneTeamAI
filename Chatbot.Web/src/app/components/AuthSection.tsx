@@ -18,10 +18,8 @@ export function AuthSection() {
   } = useAuthContext();
 
   const [regEmailBlurred, setRegEmailBlurred] = useState(false);
-  const [regPasswordBlurred, setRegPasswordBlurred] = useState(false);
   const [regDisplayNameBlurred, setRegDisplayNameBlurred] = useState(false);
   const [loginEmailBlurred, setLoginEmailBlurred] = useState(false);
-  const [loginPasswordBlurred, setLoginPasswordBlurred] = useState(false);
 
   const regEmailError = regEmailBlurred ? validateEmail(registerForm.email) : null;
   const regDisplayNameError = regDisplayNameBlurred ? validateRequired(registerForm.displayName, '显示名') : null;
@@ -89,7 +87,6 @@ export function AuthSection() {
                 type="password"
                 value={registerForm.password}
                 onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })}
-                onBlur={() => setRegPasswordBlurred(true)}
               />
               <PasswordStrengthIndicator password={registerForm.password} />
             </label>
@@ -140,7 +137,6 @@ export function AuthSection() {
                 type="password"
                 value={loginForm.password}
                 onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
-                onBlur={() => setLoginPasswordBlurred(true)}
               />
             </label>
             <button

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../useAuth';
 import { getErrorMessage } from '../workspaceApi';
-import { validateEmail, isLoginFormValid, isRegisterFormValid } from '../authValidation';
+import { validateEmail, validateRequired, isLoginFormValid, isRegisterFormValid } from '../authValidation';
 import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 export function LoginPage() {
@@ -14,12 +14,11 @@ export function LoginPage() {
   const [loginForm, setLoginForm] = useState({ email: '', password: '' });
 
   const [regEmailBlurred, setRegEmailBlurred] = useState(false);
-  const [regPasswordBlurred, setRegPasswordBlurred] = useState(false);
   const [regDisplayNameBlurred, setRegDisplayNameBlurred] = useState(false);
   const [loginEmailBlurred, setLoginEmailBlurred] = useState(false);
-  const [loginPasswordBlurred, setLoginPasswordBlurred] = useState(false);
 
   const regEmailError = regEmailBlurred ? validateEmail(registerForm.email) : null;
+  const regDisplayNameError = regDisplayNameBlurred ? validateRequired(registerForm.displayName, '显示名') : null;
   const loginEmailError = loginEmailBlurred ? validateEmail(loginForm.email) : null;
 
   async function handleRegister() {
@@ -88,7 +87,6 @@ export function LoginPage() {
               type="password"
               value={loginForm.password}
               onChange={e => setLoginForm(f => ({ ...f, password: e.target.value }))}
-              onBlur={() => setLoginPasswordBlurred(true)}
             />
           </label>
           <button
@@ -120,18 +118,18 @@ export function LoginPage() {
               type="password"
               value={registerForm.password}
               onChange={e => setRegisterForm(f => ({ ...f, password: e.target.value }))}
-              onBlur={() => setRegPasswordBlurred(true)}
             />
             <PasswordStrengthIndicator password={registerForm.password} />
           </label>
           <label className="field">
             <span>显示名</span>
             <input
-              className="text-input"
+              className={`text-input${regDisplayNameError ? ' text-input-error' : ''}`}
               value={registerForm.displayName}
               onChange={e => setRegisterForm(f => ({ ...f, displayName: e.target.value }))}
               onBlur={() => setRegDisplayNameBlurred(true)}
             />
+            {regDisplayNameError ? <span className="field-error">{regDisplayNameError}</span> : null}
           </label>
           <label className="field">
             <span>公司名</span>
