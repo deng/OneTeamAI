@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { useAuthContext, useStatusContext } from '../workspaceContexts';
+import { validateEmail, validateRequired, isLoginFormValid, isRegisterFormValid } from '../authValidation';
+import { PasswordStrengthIndicator } from './PasswordStrengthIndicator';
 
 export function AuthSection() {
   const { busyAction, feedback } = useStatusContext();
@@ -13,6 +16,14 @@ export function AuthSection() {
     setLoginForm,
     setRegisterForm,
   } = useAuthContext();
+
+  const [regEmailBlurred, setRegEmailBlurred] = useState(false);
+  const [regDisplayNameBlurred, setRegDisplayNameBlurred] = useState(false);
+  const [loginEmailBlurred, setLoginEmailBlurred] = useState(false);
+
+  const regEmailError = regEmailBlurred ? validateEmail(registerForm.email) : null;
+  const regDisplayNameError = regDisplayNameBlurred ? validateRequired(registerForm.displayName, '显示名') : null;
+  const loginEmailError = loginEmailBlurred ? validateEmail(loginForm.email) : null;
 
   return (
     <>
@@ -62,12 +73,12 @@ export function AuthSection() {
             <label className="field">
               <span>邮箱</span>
               <input
-                className="text-input"
+                className={`text-input${regEmailError ? ' text-input-error' : ''}`}
                 value={registerForm.email}
-                onChange={e =>
-                  setRegisterForm({ ...registerForm, email: e.target.value })
-                }
+                onChange={e => setRegisterForm({ ...registerForm, email: e.target.value })}
+                onBlur={() => setRegEmailBlurred(true)}
               />
+              {regEmailError ? <span className="field-error">{regEmailError}</span> : null}
             </label>
             <label className="field">
               <span>密码</span>
@@ -75,34 +86,31 @@ export function AuthSection() {
                 className="text-input"
                 type="password"
                 value={registerForm.password}
-                onChange={e =>
-                  setRegisterForm({ ...registerForm, password: e.target.value })
-                }
+                onChange={e => setRegisterForm({ ...registerForm, password: e.target.value })}
               />
+              <PasswordStrengthIndicator password={registerForm.password} />
             </label>
             <label className="field">
               <span>显示名</span>
               <input
-                className="text-input"
+                className={`text-input${regDisplayNameError ? ' text-input-error' : ''}`}
                 value={registerForm.displayName}
-                onChange={e =>
-                  setRegisterForm({ ...registerForm, displayName: e.target.value })
-                }
+                onChange={e => setRegisterForm({ ...registerForm, displayName: e.target.value })}
+                onBlur={() => setRegDisplayNameBlurred(true)}
               />
+              {regDisplayNameError ? <span className="field-error">{regDisplayNameError}</span> : null}
             </label>
             <label className="field">
               <span>公司名</span>
               <input
                 className="text-input"
                 value={registerForm.companyName}
-                onChange={e =>
-                  setRegisterForm({ ...registerForm, companyName: e.target.value })
-                }
+                onChange={e => setRegisterForm({ ...registerForm, companyName: e.target.value })}
               />
             </label>
             <button
               className="secondary-button"
-              disabled={busyAction !== null}
+              disabled={busyAction !== null || !isRegisterFormValid(registerForm.email, registerForm.password, registerForm.displayName)}
               type="button"
               onClick={handleRegister}
             >
@@ -115,12 +123,12 @@ export function AuthSection() {
             <label className="field">
               <span>邮箱</span>
               <input
-                className="text-input"
+                className={`text-input${loginEmailError ? ' text-input-error' : ''}`}
                 value={loginForm.email}
-                onChange={e =>
-                  setLoginForm({ ...loginForm, email: e.target.value })
-                }
+                onChange={e => setLoginForm({ ...loginForm, email: e.target.value })}
+                onBlur={() => setLoginEmailBlurred(true)}
               />
+              {loginEmailError ? <span className="field-error">{loginEmailError}</span> : null}
             </label>
             <label className="field">
               <span>密码</span>
@@ -128,14 +136,12 @@ export function AuthSection() {
                 className="text-input"
                 type="password"
                 value={loginForm.password}
-                onChange={e =>
-                  setLoginForm({ ...loginForm, password: e.target.value })
-                }
+                onChange={e => setLoginForm({ ...loginForm, password: e.target.value })}
               />
             </label>
             <button
               className="secondary-button"
-              disabled={busyAction !== null}
+              disabled={busyAction !== null || !isLoginFormValid(loginForm.email, loginForm.password)}
               type="button"
               onClick={handleLogin}
             >
